@@ -10,5 +10,9 @@
     "check": "bash scripts/check.sh",
     "test": "npm test --workspaces --if-present",
     "code": "code --extensionDevelopmentPath=\"$PWD/typescript-go/_extension\" --extensionDevelopmentPath=\"$PWD/packages/vscode-ets\" \"$PWD/playground\""
+  },
+  "devDependencies": {
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
   }
 }

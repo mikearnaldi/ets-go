@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "ETS trailing block call injection",
+  "scopeName": "ets.trailing-block-call.injection",
+  "injectionSelector": "L:source.ets -comment -string",
+  "patterns": [
+    { "include": "#trailing-block-call" }
+  ],
+  "repository": {
+    "trailing-block-call": {
+      "name": "meta.trailing-block-call.ets",
+      "begin": "(?<!extends )(?<!implements )\\b(?:(?:[A-Za-z_$][\\w$]*)\\.)+[A-Za-z_$][\\w$]*[ \\t]*(\\{)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.block.ets" }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.block.ets" }
+      },
+      "patterns": [
+        { "include": "source.ts" }
+      ]
+    }
+  }
+}

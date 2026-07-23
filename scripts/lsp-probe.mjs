@@ -67,7 +67,11 @@ function handleMessage(message) {
   }
   if (message.id !== undefined && message.method) {
     // Server-initiated request: log and reply null.
-    serverRequests.push(message.method);
+    if (message.method === "client/registerCapability") {
+      console.error("registerCapability:", JSON.stringify(message.params?.registrations?.map((r) => ({ id: r.id, method: r.method }))));
+    } else {
+      serverRequests.push(message.method);
+    }
     send({ jsonrpc: "2.0", id: message.id, result: null });
     return;
   }
@@ -91,8 +95,13 @@ async function main() {
     rootUri: url.pathToFileURL(projectDir).href,
     capabilities: {
       textDocument: {
+        synchronization: { dynamicRegistration: true },
+        hover: { dynamicRegistration: true },
+        definition: { dynamicRegistration: true },
+        completion: { dynamicRegistration: true },
+        diagnostic: { dynamicRegistration: true },
         semanticTokens: {
-          dynamicRegistration: false,
+          dynamicRegistration: true,
           requests: { full: true, range: false },
           tokenTypes: TOKEN_TYPES,
           tokenModifiers: TOKEN_MODIFIERS,
@@ -110,7 +119,7 @@ async function main() {
 
   const legend = init.capabilities.semanticTokensProvider?.legend;
   console.error("server:", JSON.stringify(init.serverInfo ?? {}));
-  console.error("semanticTokensProvider legend types:", legend?.tokenTypes?.length ?? "none");
+  console.error("legend:", JSON.stringify(legend));
 
   const content = fs.readFileSync(targetFile, "utf8");
   const uri = url.pathToFileURL(targetFile).href;
@@ -121,26 +130,32 @@ async function main() {
   // Give the project time to load (config discovery, mapper spawn, transform).
   await new Promise((r) => setTimeout(r, 3000));
 
+  const decode = (data, label) => {
+    console.error(`${label}: ${data.length / 5} tokens`);
+    const lines = content.split("\n");
+    let line = 0, char = 0;
+    for (let i = 0; i + 4 < data.length; i += 5) {
+      const dl = data[i], dc = data[i + 1], len = data[i + 2], type = data[i + 3], mods = data[i + 4];
+      line += dl;
+      char = dl === 0 ? char + dc : dc;
+      const text = (lines[line] ?? "").slice(char, char + len);
+      const modNames = TOKEN_MODIFIERS.filter((_, b) => mods & (1 << b)).join(".");
+      console.log(
+        `${String(line + 1).padStart(3)}:${String(char).padStart(3)} ${TOKEN_TYPES[type] ?? type}${modNames ? "." + modNames : ""} ${JSON.stringify(text)}`,
+      );
+    }
+  };
+
+  const rangeResult = await call("textDocument/semanticTokens/range", {
+    textDocument: { uri },
+    range: { start: { line: 0, character: 0 }, end: { line: 14, character: 0 } },
+  });
+  decode(rangeResult?.data ?? [], "range[0:14]");
+
   const result = await call("textDocument/semanticTokens/full", {
     textDocument: { uri },
   });
-
-  const data = result?.data ?? result?.semanticTokens?.data ?? [];
-  console.error("raw token uint32 count:", data.length);
-  console.error("server->client requests seen:", serverRequests.join(", ") || "none");
-
-  const lines = content.split("\n");
-  let line = 0, char = 0;
-  for (let i = 0; i + 4 < data.length; i += 5) {
-    const dl = data[i], dc = data[i + 1], len = data[i + 2], type = data[i + 3], mods = data[i + 4];
-    line += dl;
-    char = dl === 0 ? char + dc : dc;
-    const text = (lines[line] ?? "").slice(char, char + len);
-    const modNames = TOKEN_MODIFIERS.filter((_, b) => mods & (1 << b)).join(".");
-    console.log(
-      `${String(line + 1).padStart(3)}:${String(char).padStart(3)} ${TOKEN_TYPES[type] ?? type}${modNames ? "." + modNames : ""} ${JSON.stringify(text)}`,
-    );
-  }
+  decode(result?.data ?? result?.semanticTokens?.data ?? [], "full");
   child.kill();
   process.exit(0);
 }
