@@ -8,6 +8,7 @@
   "scripts": {
     "setup:tsgo": "bash scripts/setup-tsgo.sh",
     "check": "bash scripts/check.sh",
-    "test": "npm test --workspaces --if-present"
+    "test": "npm test --workspaces --if-present",
+    "code": "code --extensionDevelopmentPath=\"$PWD/typescript-go/_extension\" --extensionDevelopmentPath=\"$PWD/packages/vscode-ets\" \"$PWD/playground\""
   }
 }

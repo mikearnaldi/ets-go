@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run ETS Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/typescript-go/_extension",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/vscode-ets",
+        "${workspaceFolder}/playground"
+      ]
+    }
+  ]
+}

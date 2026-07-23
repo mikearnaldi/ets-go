@@ -17,3 +17,10 @@ git pull --ff-only origin "pull/${PR_NUMBER}/head" || true
 
 go build -o built/local/tsgo ./cmd/tsgo
 echo "Built: $(pwd)/built/local/tsgo"
+
+# Build the native-preview VS Code extension bundle (used via --extensionDevelopmentPath).
+if [ ! -d node_modules ]; then
+  npm install
+fi
+npm run -w _extension build
+echo "Built: $(pwd)/_extension/dist/extension.bundle.js"

@@ -1,0 +1,39 @@
+{
+  "name": "ets",
+  "displayName": "ETS",
+  "description": "ETS language support (Effect TypeScript), backed by the TypeScript 7 content mapper protocol",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "ets",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.126.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:ets"
+  ],
+  "main": "./src/extension.js",
+  "extensionDependencies": [
+    "TypeScriptTeam.native-preview"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "ets",
+        "aliases": ["ETS", "ets"],
+        "extensions": [".ets"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ets",
+        "scopeName": "source.ets",
+        "path": "./syntaxes/ets.tmLanguage.json"
+      }
+    ]
+  }
+}
