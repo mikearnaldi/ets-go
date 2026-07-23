@@ -10,12 +10,12 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/core"
-	"github.com/microsoft/typescript-go/internal/debug"
-	"github.com/microsoft/typescript-go/internal/diagnostics"
-	"github.com/microsoft/typescript-go/internal/jsnum"
-	"github.com/microsoft/typescript-go/internal/stringutil"
+	"ets/internal/ast"
+	"ets/internal/core"
+	"ets/internal/debug"
+	"ets/internal/diagnostics"
+	"ets/internal/jsnum"
+	"ets/internal/stringutil"
 )
 
 type EscapeSequenceScanningFlags int32

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/microsoft/typescript-go/internal/jsonrpc"
+	"ets/internal/jsonrpc"
 )
 
 const (

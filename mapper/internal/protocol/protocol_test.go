@@ -7,7 +7,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/microsoft/typescript-go/etsmapper/internal/protocol"
+	"ets/internal/protocol"
 )
 
 func frame(t *testing.T, v any) []byte {

@@ -14,8 +14,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/microsoft/typescript-go/etsmapper/internal/protocol"
-	"github.com/microsoft/typescript-go/etsmapper/internal/transform"
+	"ets/internal/protocol"
+	"ets/internal/transform"
 )
 
 const (

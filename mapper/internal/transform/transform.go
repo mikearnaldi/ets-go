@@ -17,11 +17,11 @@ package transform
 import (
 	"strings"
 
-	"github.com/microsoft/typescript-go/etsmapper/etsparser"
-	"github.com/microsoft/typescript-go/etsmapper/etsscanner"
-	"github.com/microsoft/typescript-go/etsmapper/internal/protocol"
-	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/core"
+	"ets/etsparser"
+	"ets/etsscanner"
+	"ets/internal/protocol"
+	"ets/internal/ast"
+	"ets/internal/core"
 )
 
 const (

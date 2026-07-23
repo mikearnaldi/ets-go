@@ -4,10 +4,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/core"
-	"github.com/microsoft/typescript-go/internal/diagnostics"
-	scanner "github.com/microsoft/typescript-go/etsmapper/etsscanner"
+	"ets/internal/ast"
+	"ets/internal/core"
+	"ets/internal/diagnostics"
+	scanner "ets/etsscanner"
 )
 
 func (p *Parser) finishReparsedNode(node *ast.Node, locationNode *ast.Node) {

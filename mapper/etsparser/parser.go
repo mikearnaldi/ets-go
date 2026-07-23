@@ -6,14 +6,14 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/collections"
-	"github.com/microsoft/typescript-go/internal/core"
-	"github.com/microsoft/typescript-go/internal/debug"
-	"github.com/microsoft/typescript-go/internal/diagnostics"
-	scanner "github.com/microsoft/typescript-go/etsmapper/etsscanner"
-	"github.com/microsoft/typescript-go/internal/stringutil"
-	"github.com/microsoft/typescript-go/internal/tspath"
+	"ets/internal/ast"
+	"ets/internal/collections"
+	"ets/internal/core"
+	"ets/internal/debug"
+	"ets/internal/diagnostics"
+	scanner "ets/etsscanner"
+	"ets/internal/stringutil"
+	"ets/internal/tspath"
 )
 
 type ParsingContext int

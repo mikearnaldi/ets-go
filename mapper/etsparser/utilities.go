@@ -3,9 +3,9 @@ package etsparser
 import (
 	"slices"
 
-	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/core"
-	scanner "github.com/microsoft/typescript-go/etsmapper/etsscanner"
+	"ets/internal/ast"
+	"ets/internal/core"
+	scanner "ets/etsscanner"
 )
 
 func getLanguageVariant(scriptKind core.ScriptKind) core.LanguageVariant {

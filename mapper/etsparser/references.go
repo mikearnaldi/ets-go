@@ -3,9 +3,9 @@ package etsparser
 import (
 	"strings"
 
-	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/core"
-	"github.com/microsoft/typescript-go/internal/tspath"
+	"ets/internal/ast"
+	"ets/internal/core"
+	"ets/internal/tspath"
 )
 
 func collectExternalModuleReferences(file *ast.SourceFile) {

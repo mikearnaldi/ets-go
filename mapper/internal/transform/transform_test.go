@@ -3,7 +3,7 @@ package transform
 import (
 	"testing"
 
-	"github.com/microsoft/typescript-go/etsmapper/internal/protocol"
+	"ets/internal/protocol"
 )
 
 func TestTransformPassThroughCoalesces(t *testing.T) {

@@ -5,9 +5,9 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/core"
-	"github.com/microsoft/typescript-go/internal/debug"
+	"ets/internal/ast"
+	"ets/internal/core"
+	"ets/internal/debug"
 )
 
 func tokenIsIdentifierOrKeyword(token ast.Kind) bool {

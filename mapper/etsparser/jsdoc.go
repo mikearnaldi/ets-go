@@ -4,10 +4,10 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/core"
-	"github.com/microsoft/typescript-go/internal/diagnostics"
-	"github.com/microsoft/typescript-go/internal/stringutil"
+	"ets/internal/ast"
+	"ets/internal/core"
+	"ets/internal/diagnostics"
+	"ets/internal/stringutil"
 )
 
 func init() {

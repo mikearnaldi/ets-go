@@ -5,8 +5,8 @@ package etsparser
 // hook in parseAssignmentExpressionOrHigherWorker, marked with an ETS comment.
 
 import (
-	"github.com/microsoft/typescript-go/internal/ast"
-	"github.com/microsoft/typescript-go/internal/diagnostics"
+	"ets/internal/ast"
+	"ets/internal/diagnostics"
 )
 
 // isETSTrailingBlockCallee reports whether expr can be the callee of a
