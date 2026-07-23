@@ -1,0 +1,13 @@
+{
+  "name": "ets-go",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "playground"
+  ],
+  "scripts": {
+    "setup:tsgo": "bash scripts/setup-tsgo.sh",
+    "check": "bash scripts/check.sh",
+    "test": "npm test --workspaces --if-present"
+  }
+}

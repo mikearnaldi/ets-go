@@ -1,0 +1,16 @@
+{
+  "name": "ets-content-mapper",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Content mapper that compiles .ets (Effect TypeScript) files to TypeScript",
+  "type": "commonjs",
+  "exports": {
+    "./transform": "./src/transform.js"
+  },
+  "tsContentMapper": {
+    "exec": ["node", "./src/server.js"]
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  }
+}
