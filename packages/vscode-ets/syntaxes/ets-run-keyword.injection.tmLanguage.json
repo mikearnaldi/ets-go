@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "ETS run keyword injection",
+  "scopeName": "ets.run-keyword.injection",
+  "injectionSelector": "L:meta.trailing-block-call.ets -comment -string",
+  "patterns": [
+    { "include": "#run-keyword" }
+  ],
+  "repository": {
+    "run-keyword": {
+      "name": "keyword.control.flow.ets",
+      "match": "\\brun\\b"
+    }
+  }
+}

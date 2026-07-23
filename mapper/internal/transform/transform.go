@@ -76,7 +76,7 @@ func collectETSNodes(file *ast.SourceFile) []*ast.Node {
 
 func isETSNode(node *ast.Node) bool {
 	switch node.Kind {
-	case ast.KindETSGenBlock:
+	case ast.KindETSGenBlock, ast.KindETSRunExpression:
 		return true
 	}
 	return false
@@ -115,10 +115,23 @@ func (f *fileEmitter) emitETS(node *ast.Node) int {
 	switch node.Kind {
 	case ast.KindETSGenBlock:
 		return f.emitGenBlock(node)
+	case ast.KindETSRunExpression:
+		return f.emitRunExpression(node)
 	default:
 		f.e.verbatim(node.Pos(), node.End())
 		return node.End()
 	}
+}
+
+// emitRunExpression rewrites `run <operand>` to `yield* <operand>`. The
+// `run` keyword maps to `yield*` as an alias so diagnostics refer to `run`.
+func (f *fileEmitter) emitRunExpression(node *ast.Node) int {
+	runStart := etsscanner.SkipTrivia(f.src, node.Pos())
+	runEnd := runStart + len("run")
+	f.e.verbatim(node.Pos(), runStart)
+	f.e.alias(runStart, runEnd, "yield*")
+	f.emitRange(runEnd, node.End())
+	return node.End()
 }
 
 // emitGenBlock rewrites `<callee> { body }` to `<callee>(function* () { body })`.

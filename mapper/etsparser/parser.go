@@ -101,6 +101,9 @@ type Parser struct {
 	currentParent        *ast.Node
 	setParentFromContext ast.Visitor
 	reparsedClones       []*ast.Node
+
+	// ETS: nesting depth of trailing block bodies (see ets.go).
+	inETSGenBlock int
 }
 
 func newParser() *Parser {
@@ -4099,6 +4102,10 @@ func (p *Parser) parseAssignmentExpressionOrHigherWorker(allowReturnTypeInArrowF
 	if p.isYieldExpression() {
 		return p.parseYieldExpression()
 	}
+	// ETS: `run <expr>` inside a trailing block body desugars to `yield* <expr>`.
+	if p.inETSGenBlock > 0 && p.isETSRunExpression() {
+		return p.parseETSRunExpression()
+	}
 	// Then, check if we have an arrow function (production '4' and '5') that starts with a parenthesized
 	// parameter list or is an async arrow function.
 	// AsyncArrowFunctionExpression:
@@ -4586,6 +4593,12 @@ func (p *Parser) parseConditionalExpressionRest(leftOperand *ast.Expression, pos
 
 func (p *Parser) parseBinaryExpressionOrHigher(precedence ast.OperatorPrecedence) *ast.Expression {
 	pos := p.nodePos()
+	// ETS: `run <expr>` in operand position, mirroring how `yield` is
+	// recognized at the start of an assignment expression (see the hook in
+	// parseAssignmentExpressionOrHigherWorker).
+	if p.inETSGenBlock > 0 && p.isETSRunExpression() {
+		return p.parseETSRunExpression()
+	}
 	leftOperand := p.parseUnaryExpressionOrHigher()
 	return p.parseBinaryExpressionRest(precedence, leftOperand, pos)
 }

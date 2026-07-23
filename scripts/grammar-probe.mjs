@@ -16,6 +16,7 @@ const VSCODE_TS_GRAMMAR =
   "/Applications/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-basics/syntaxes/TypeScript.tmLanguage.json";
 const ETS_GRAMMAR = path.join(root, "packages", "vscode-ets", "syntaxes", "ets.tmLanguage.json");
 const ETS_INJECTION = path.join(root, "packages", "vscode-ets", "syntaxes", "ets-trailing-block-call.injection.tmLanguage.json");
+const ETS_RUN_INJECTION = path.join(root, "packages", "vscode-ets", "syntaxes", "ets-run-keyword.injection.tmLanguage.json");
 
 const wasmBin = fs.readFileSync(require.resolve("vscode-oniguruma/release/onig.wasm")).buffer;
 await oniguruma.loadWASM(wasmBin);
@@ -26,7 +27,9 @@ const registry = new vsctm.Registry({
     createOnigString: (s) => new oniguruma.OnigString(s),
   }),
   getInjections: (scopeName) =>
-    scopeName === "source.ets" ? ["ets.trailing-block-call.injection"] : undefined,
+    scopeName === "source.ets"
+      ? ["ets.trailing-block-call.injection", "ets.run-keyword.injection"]
+      : undefined,
   loadGrammar: async (scopeName) => {
     if (scopeName === "source.ts") {
       return vsctm.parseRawGrammar(fs.readFileSync(VSCODE_TS_GRAMMAR, "utf8"), VSCODE_TS_GRAMMAR);
@@ -36,6 +39,9 @@ const registry = new vsctm.Registry({
     }
     if (scopeName === "ets.trailing-block-call.injection") {
       return vsctm.parseRawGrammar(fs.readFileSync(ETS_INJECTION, "utf8"), ETS_INJECTION);
+    }
+    if (scopeName === "ets.run-keyword.injection") {
+      return vsctm.parseRawGrammar(fs.readFileSync(ETS_RUN_INJECTION, "utf8"), ETS_RUN_INJECTION);
     }
     return null;
   },

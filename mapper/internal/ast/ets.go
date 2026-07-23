@@ -10,6 +10,7 @@ package ast
 
 const (
 	KindETSGenBlock Kind = KindCount + 1 + iota
+	KindETSRunExpression
 )
 
 // ETSGenBlock is a trailing block call: `<callee> { statements }`, which the
@@ -47,4 +48,39 @@ func IsETSGenBlock(node *Node) bool {
 
 func (node *Node) AsETSGenBlock() *ETSGenBlock {
 	return node.data.(*ETSGenBlock)
+}
+
+// ETSRunExpression is `run <operand>` inside a trailing block body, which the
+// ETS transform rewrites to `yield* <operand>`. The `run` keyword itself is
+// not stored; its span is [node.Pos()+trivia, +3).
+type ETSRunExpression struct {
+	ExpressionBase
+	CompositeBase
+	Expression *Expression // the operand
+}
+
+func (f *NodeFactory) NewETSRunExpression(expression *Expression) *Node {
+	data := &ETSRunExpression{}
+	data.Expression = expression
+	return f.newNode(KindETSRunExpression, data)
+}
+
+func (node *ETSRunExpression) ForEachChild(v Visitor) bool {
+	return visit(v, node.Expression)
+}
+
+func (node *ETSRunExpression) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.NewETSRunExpression(v.visitNode(node.Expression))
+}
+
+func (node *ETSRunExpression) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewETSRunExpression(node.Expression), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func IsETSRunExpression(node *Node) bool {
+	return node.Kind == KindETSRunExpression
+}
+
+func (node *Node) AsETSRunExpression() *ETSRunExpression {
+	return node.data.(*ETSRunExpression)
 }

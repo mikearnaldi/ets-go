@@ -13,7 +13,7 @@ Currently implemented syntax:
 ```ts
 // ETS
 const program = Effect.gen {
-  const user = yield* getUser(1);
+  const user = run getUser(1);
   return user.name;
 }
 
@@ -24,9 +24,18 @@ const program = Effect.gen(function* () {
 })
 ```
 
-A *trailing block call*: `<MemberExpr> { statements }` in expression position
-(same line only) becomes `<expr>(function* () { statements })`. More
-constructs (Schema, Service, ...) will follow the same machinery.
+Two constructs, which compose:
+
+- **Trailing block call**: `<MemberExpr> { statements }` in expression
+  position (opening brace on the same line) becomes
+  `<expr>(function* () { statements })`.
+- **`run <expr>`**: inside a trailing block body, `run x` becomes `yield* x`
+  anywhere `yield*` may appear, and maps back to `run` in diagnostics.
+  `run` stays an ordinary identifier when followed by `(`, `[`, a template,
+  or a binary/postfix operator (`run + 1`, `run(x)`, `run.x` are untouched),
+  and outside trailing blocks it is never special.
+
+More constructs (Schema, Service, ...) will follow the same machinery.
 
 ## Repository layout
 

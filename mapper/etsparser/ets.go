@@ -27,6 +27,50 @@ func isETSTrailingBlockCallee(expr *ast.Expression) bool {
 // block. The current token must be the opening brace.
 func (p *Parser) parseETSTrailingBlock(callee *ast.Expression) *ast.Expression {
 	pos := callee.Pos()
+	p.inETSGenBlock++
 	block := p.parseBlock(false /*ignoreMissingOpenBrace*/, (*diagnostics.Message)(nil))
+	p.inETSGenBlock--
 	return p.finishNode(p.factory.NewETSGenBlock(callee, block), pos)
+}
+
+// isETSRunExpression reports whether the current position starts a `run`
+// expression: the identifier `run` followed, on the same line, by a token
+// that can start its operand.
+func (p *Parser) isETSRunExpression() bool {
+	if p.token != ast.KindIdentifier || p.scanner.TokenValue() != "run" {
+		return false
+	}
+	return p.lookAhead((*Parser).nextTokenIsETSRunOperand)
+}
+
+// nextTokenIsETSRunOperand decides whether the token after `run` begins its
+// operand. Exclusions keep ordinary identifier uses of `run` intact:
+//
+//   - `(` `[` template: calls, element access, tagged templates
+//   - `+` `-` `++` `--` `/`: binary/postfix-ambiguous (`run + 1`, `run++`)
+//
+// Everything else must be a token that can start an expression, which covers
+// the primary case (`run getUser(1)`) as well as `run await x`, `run !x`,
+// `run new X()`, and nested `run run x`.
+func (p *Parser) nextTokenIsETSRunOperand() bool {
+	p.nextToken()
+	if p.hasPrecedingLineBreak() {
+		return false
+	}
+	switch p.token {
+	case ast.KindOpenParenToken, ast.KindOpenBracketToken, ast.KindNoSubstitutionTemplateLiteral, ast.KindTemplateHead,
+		ast.KindPlusToken, ast.KindMinusToken, ast.KindPlusPlusToken, ast.KindMinusMinusToken,
+		ast.KindSlashToken:
+		return false
+	}
+	return p.isStartOfExpression()
+}
+
+// parseETSRunExpression parses `run <assignment-expression>` into an
+// ETSRunExpression node. The current token must be the `run` identifier.
+func (p *Parser) parseETSRunExpression() *ast.Expression {
+	pos := p.nodePos()
+	p.nextToken() // consume `run`
+	operand := p.parseAssignmentExpressionOrHigher()
+	return p.finishNode(p.factory.NewETSRunExpression(operand), pos)
 }

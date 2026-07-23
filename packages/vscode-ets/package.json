@@ -35,6 +35,11 @@
         "scopeName": "ets.trailing-block-call.injection",
         "path": "./syntaxes/ets-trailing-block-call.injection.tmLanguage.json",
         "injectTo": ["source.ets"]
+      },
+      {
+        "scopeName": "ets.run-keyword.injection",
+        "path": "./syntaxes/ets-run-keyword.injection.tmLanguage.json",
+        "injectTo": ["source.ets"]
       }
     ]
   }
