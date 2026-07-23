@@ -15,6 +15,7 @@
 package transform
 
 import (
+	"path/filepath"
 	"strings"
 
 	"ets/etsparser"
@@ -34,8 +35,12 @@ const (
 
 // Transform compiles one .ets file.
 func Transform(params protocol.TransformParams) (protocol.TransformResult, error) {
+	fileName := params.FileName
+	if abs, err := filepath.Abs(fileName); err == nil {
+		fileName = abs
+	}
 	file := etsparser.ParseSourceFile(ast.SourceFileParseOptions{
-		FileName: params.FileName,
+		FileName: fileName,
 	}, params.Content, core.ScriptKindTS)
 
 	e := newEmitter(params.Content)

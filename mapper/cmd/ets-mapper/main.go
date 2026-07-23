@@ -25,10 +25,40 @@ const (
 )
 
 func main() {
+	// Hidden debug mode: `ets-mapper debug <file>` prints the transformed
+	// text and span mappings for a single .ets file.
+	if len(os.Args) == 3 && os.Args[1] == "debug" {
+		if err := debug(os.Args[2]); err != nil {
+			fmt.Fprintf(os.Stderr, "[ets-mapper] debug: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "[ets-mapper] fatal: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func debug(path string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	result, err := transform.Transform(protocol.TransformParams{
+		FileName: path,
+		Content:  string(content),
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Println("=== text ===")
+	fmt.Print(result.Text)
+	fmt.Println("=== mappings ===")
+	for _, m := range result.Mappings {
+		fmt.Printf("gen[%d:%d] -> orig[%d:%d] kind=%d\n", m[0], m[0]+m[1], m[2], m[2]+m[3], m[4])
+	}
+	return nil
 }
 
 func run() error {
