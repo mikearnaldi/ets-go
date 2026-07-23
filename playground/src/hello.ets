@@ -8,8 +8,8 @@ export class User extends Schema.Class<User>("User")({
 export const getUser = (id: number) =>
   Effect.succeed(new User({ id, name: "John" }));
 
-export const program = Effect.gen(function* () {
+export const program = Effect.gen {
   const user = yield* getUser(1);
   return user.name;
-});
+}
 

@@ -4134,6 +4134,14 @@ func (p *Parser) parseAssignmentExpressionOrHigherWorker(allowReturnTypeInArrowF
 	pos := p.nodePos()
 	jsdoc := p.jsdocScannerInfo()
 	expr := p.parseBinaryExpressionOrHigher(ast.OperatorPrecedenceLowest)
+	// ETS: a trailing block call, `<callee> { statements }`, desugars to
+	// `<callee>(function* () { statements })`. The opening brace must be on
+	// the same line as the callee (restricted production). After consuming
+	// the block, resume binary parsing so `<callee> { } + 1` works.
+	if p.token == ast.KindOpenBraceToken && !p.hasPrecedingLineBreak() && isETSTrailingBlockCallee(expr) {
+		expr = p.parseETSTrailingBlock(expr)
+		expr = p.parseBinaryExpressionRest(ast.OperatorPrecedenceLowest, expr, pos)
+	}
 	// To avoid a look-ahead, we did not handle the case of an arrow function with a single un-parenthesized
 	// parameter ('x => ...') above. We handle it here by checking if the parsed expression was a single
 	// identifier and the current token is an arrow.

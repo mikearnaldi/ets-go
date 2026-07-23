@@ -4,11 +4,12 @@
 // The pipeline:
 //
 //  1. Parse the .ets source with etsparser (typescript-go's parser, extended
-//     with ETS productions as the language is designed).
-//  2. Walk the AST, emitting the output as a sequence of segments: verbatim
-//     slices of the original source, synthesized scaffolding, and atom/alias
-//     replacements. Positions are byte offsets end-to-end (the negotiated
-//     position encoding is utf-8), so AST spans map directly.
+//     with ETS productions).
+//  2. Collect the ETS construct nodes and walk the source in order, emitting
+//     output as segments: verbatim slices of the original source, synthesized
+//     scaffolding, and atom/alias replacements. Positions are byte offsets
+//     end-to-end (the negotiated position encoding is utf-8), so AST spans
+//     map directly.
 //  3. The emitter assembles the final text and the span map tuples from the
 //     segments; gaps between mappings are synthesized content by definition.
 package transform
@@ -16,8 +17,9 @@ package transform
 import (
 	"strings"
 
-	"github.com/microsoft/typescript-go/etsmapper/internal/protocol"
 	"github.com/microsoft/typescript-go/etsmapper/etsparser"
+	"github.com/microsoft/typescript-go/etsmapper/etsscanner"
+	"github.com/microsoft/typescript-go/etsmapper/internal/protocol"
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/core"
 )
@@ -37,7 +39,8 @@ func Transform(params protocol.TransformParams) (protocol.TransformResult, error
 	}, params.Content, core.ScriptKindTS)
 
 	e := newEmitter(params.Content)
-	emitSourceFile(e, file)
+	f := &fileEmitter{e: e, src: params.Content, ets: collectETSNodes(file)}
+	f.emitRange(0, len(params.Content))
 	text, mappings := e.finish()
 
 	return protocol.TransformResult{
@@ -45,6 +48,89 @@ func Transform(params protocol.TransformParams) (protocol.TransformResult, error
 		ScriptKind: scriptKindTS,
 		Mappings:   mappings,
 	}, nil
+}
+
+// collectETSNodes returns every ETS construct node in the file, in source
+// order (a parent always precedes its nested children).
+func collectETSNodes(file *ast.SourceFile) []*ast.Node {
+	var nodes []*ast.Node
+	var visit func(node *ast.Node) bool
+	visit = func(node *ast.Node) bool {
+		if node == nil {
+			return false
+		}
+		if isETSNode(node) {
+			nodes = append(nodes, node)
+		}
+		node.ForEachChild(visit)
+		return false
+	}
+	file.AsNode().ForEachChild(visit)
+	return nodes
+}
+
+func isETSNode(node *ast.Node) bool {
+	switch node.Kind {
+	case ast.KindETSGenBlock:
+		return true
+	}
+	return false
+}
+
+// fileEmitter emits the source in order, transforming ETS nodes as it
+// encounters them.
+type fileEmitter struct {
+	e   *emitter
+	src string
+	ets []*ast.Node
+	i   int
+}
+
+// emitRange emits src[start:end), transforming any ETS nodes inside.
+func (f *fileEmitter) emitRange(start, end int) {
+	cursor := start
+	for f.i < len(f.ets) {
+		node := f.ets[f.i]
+		if node.Pos() < cursor {
+			// Already consumed by an enclosing ETS node's handler.
+			f.i++
+			continue
+		}
+		if node.Pos() >= end {
+			break
+		}
+		f.e.verbatim(cursor, node.Pos())
+		f.i++
+		cursor = f.emitETS(node)
+	}
+	f.e.verbatim(cursor, end)
+}
+
+func (f *fileEmitter) emitETS(node *ast.Node) int {
+	switch node.Kind {
+	case ast.KindETSGenBlock:
+		return f.emitGenBlock(node)
+	default:
+		f.e.verbatim(node.Pos(), node.End())
+		return node.End()
+	}
+}
+
+// emitGenBlock rewrites `<callee> { body }` to `<callee>(function* () { body })`.
+func (f *fileEmitter) emitGenBlock(node *ast.Node) int {
+	gen := node.AsETSGenBlock()
+	callee := gen.Expression
+	block := gen.Block
+
+	f.e.verbatim(node.Pos(), callee.End())
+	f.e.synthesize("(function* () ")
+	openBrace := etsscanner.SkipTrivia(f.src, block.Pos())
+	f.e.verbatim(openBrace, openBrace+1)
+	closeBrace := block.End() - 1
+	f.emitRange(openBrace+1, closeBrace)
+	f.e.verbatim(closeBrace, closeBrace+1)
+	f.e.synthesize(")")
+	return node.End()
 }
 
 // emitter accumulates output text and span mappings segment by segment.
@@ -117,24 +203,4 @@ func (e *emitter) appendMapping(kind int32, genStart, genLength, origStart, orig
 
 func (e *emitter) finish() (string, []protocol.SpanMapping) {
 	return e.out.String(), e.mappings
-}
-
-// emitSourceFile walks top-level statements. cursor tracks the original
-// offset up to which output has been emitted; each handler returns the new
-// cursor. Trivia between statements is swallowed into verbatim segments.
-func emitSourceFile(e *emitter, file *ast.SourceFile) {
-	cursor := 0
-	for _, stmt := range file.Statements.Nodes {
-		cursor = emitStatement(e, cursor, stmt)
-	}
-	e.verbatim(cursor, len(e.src))
-}
-
-func emitStatement(e *emitter, cursor int, stmt *ast.Node) int {
-	switch stmt.Kind {
-	// ETS construct kinds are dispatched here as the grammar lands.
-	default:
-		e.verbatim(cursor, stmt.End())
-		return stmt.End()
-	}
 }

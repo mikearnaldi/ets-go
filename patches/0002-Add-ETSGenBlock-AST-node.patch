@@ -1,0 +1,87 @@
+From 8fdae6034c80490b2fd8cd835904ade8126fc53e Mon Sep 17 00:00:00 2001
+From: Michael Arnaldi <michael.arnaldi@effectful.co>
+Date: Thu, 23 Jul 2026 21:15:20 +0200
+Subject: [PATCH] Add ETSGenBlock AST node (ETS additive patch)
+
+---
+ internal/ast/ast_generated.go |  6 ++++-
+ internal/ast/ets.go           | 50 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 55 insertions(+), 1 deletion(-)
+ create mode 100644 internal/ast/ets.go
+
+diff --git a/internal/ast/ast_generated.go b/internal/ast/ast_generated.go
+index d85604880..64c21024b 100644
+--- a/internal/ast/ast_generated.go
++++ b/internal/ast/ast_generated.go
+@@ -9014,7 +9014,11 @@ func (n *Node) ForEachChild(v Visitor) bool {
+ 	case KindJSDocParameterTag, KindJSDocPropertyTag:
+ 		return n.data.(*JSDocParameterOrPropertyTag).ForEachChild(v)
+ 	default:
+-		return false
++		// ETS patch: dispatch unknown kinds through the node data interface so
++		// additively-defined node kinds (see ets.go) can be traversed. For all
++		// built-in kinds reaching this default, the data embeds NodeDefault,
++		// whose ForEachChild returns false, preserving prior behavior.
++		return n.data.ForEachChild(v)
+ 	}
+ }
+ 
+diff --git a/internal/ast/ets.go b/internal/ast/ets.go
+new file mode 100644
+index 000000000..1317ee53e
+--- /dev/null
++++ b/internal/ast/ets.go
+@@ -0,0 +1,50 @@
++package ast
++
++// ETS AST nodes. This file is NOT generated; it is a local additive patch
++// (see patches/ in the ets-go repository). ETS nodes are produced only by the
++// ETS-aware parser vendored in the ets-go mapper and are consumed by the ETS
++// transform before any TypeScript compiler machinery sees the tree.
++//
++// Kind values are offset from KindCount so upstream kind additions never
++// collide with ETS kinds.
++
++const (
++	KindETSGenBlock Kind = KindCount + 1 + iota
++)
++
++// ETSGenBlock is a trailing block call: `<callee> { statements }`, which the
++// ETS transform rewrites to `<callee>(function* () { statements })`.
++type ETSGenBlock struct {
++	ExpressionBase
++	CompositeBase
++	Expression *Expression // the callee expression
++	Block      *Node       // a Block node with the body statements
++}
++
++func (f *NodeFactory) NewETSGenBlock(expression *Expression, block *Node) *Node {
++	data := &ETSGenBlock{}
++	data.Expression = expression
++	data.Block = block
++	return f.newNode(KindETSGenBlock, data)
++}
++
++func (node *ETSGenBlock) ForEachChild(v Visitor) bool {
++	return visit(v, node.Expression) ||
++		visit(v, node.Block)
++}
++
++func (node *ETSGenBlock) VisitEachChild(v *NodeVisitor) *Node {
++	return v.Factory.NewETSGenBlock(v.visitNode(node.Expression), v.visitNode(node.Block))
++}
++
++func (node *ETSGenBlock) Clone(f NodeFactoryCoercible) *Node {
++	return cloneNode(f.AsNodeFactory().NewETSGenBlock(node.Expression, node.Block), node.AsNode(), f.AsNodeFactory().hooks)
++}
++
++func IsETSGenBlock(node *Node) bool {
++	return node.Kind == KindETSGenBlock
++}
++
++func (node *Node) AsETSGenBlock() *ETSGenBlock {
++	return node.data.(*ETSGenBlock)
++}
+-- 
+2.53.0
+
