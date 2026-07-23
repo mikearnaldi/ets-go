@@ -9,4 +9,7 @@ if [ ! -x "$TSGO" ]; then
   bash scripts/setup-tsgo.sh
 fi
 
+# Build the content mapper binary.
+(cd mapper && go build -o ../packages/ets-content-mapper/bin/ets-mapper ./cmd/ets-mapper)
+
 "$TSGO" --loadExternalPlugins --project playground "$@"
