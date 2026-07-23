@@ -9,9 +9,14 @@
   "repository": {
     "trailing-block-call": {
       "name": "meta.trailing-block-call.ets",
-      "begin": "(?<!extends )(?<!implements )\\b(?:(?:[A-Za-z_$][\\w$]*)\\.)+[A-Za-z_$][\\w$]*[ \\t]*(\\{)",
+      "begin": "(?<!extends )(?<!implements )\\b((?:(?:[A-Za-z_$][\\w$]*)\\.)+[A-Za-z_$][\\w$]*)[ \\t]*(\\{)",
       "beginCaptures": {
-        "1": { "name": "punctuation.definition.block.ets" }
+        "1": {
+          "patterns": [
+            { "include": "source.ts" }
+          ]
+        },
+        "2": { "name": "punctuation.definition.block.ets" }
       },
       "end": "\\}",
       "endCaptures": {

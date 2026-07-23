@@ -13,3 +13,7 @@ export const program = Effect.gen {
   return user.name;
 }
 
+export const program2 = Effect.gen(function* () {
+  const user = yield* getUser(1);
+  return user.name;
+})
