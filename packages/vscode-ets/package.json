@@ -12,9 +12,6 @@
   "categories": [
     "Programming Languages"
   ],
-  "activationEvents": [
-    "onLanguage:ets"
-  ],
   "main": "./src/extension.js",
   "extensionDependencies": [
     "TypeScriptTeam.native-preview"
