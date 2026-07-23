@@ -1,0 +1,162 @@
+From 439a19e3f37e7b4eb1538ab82e5844be1f4ae869 Mon Sep 17 00:00:00 2001
+From: Michael Arnaldi <michael.arnaldi@effectful.co>
+Date: Thu, 23 Jul 2026 19:46:51 +0200
+Subject: [PATCH] Register semantic tokens capability for content-mapped files
+
+---
+ internal/lsp/server.go | 23 +++++++++++++++++++++--
+ package-lock.json      | 27 ---------------------------
+ 2 files changed, 21 insertions(+), 29 deletions(-)
+
+diff --git a/internal/lsp/server.go b/internal/lsp/server.go
+index 9fa5b2661..a50cc4d16 100644
+--- a/internal/lsp/server.go
++++ b/internal/lsp/server.go
+@@ -314,8 +314,9 @@ const (
+ 	contentMapperImplementationRegistrationID    = "content-mapper-implementation"
+ 	contentMapperReferencesRegistrationID        = "content-mapper-references"
+ 	contentMapperDocumentHighlightRegistrationID = "content-mapper-document-highlight"
+-	contentMapperCompletionRegistrationID        = "content-mapper-completion"
+-	contentMapperRenameRegistrationID            = "content-mapper-rename"
++	contentMapperCompletionRegistrationID         = "content-mapper-completion"
++	contentMapperRenameRegistrationID             = "content-mapper-rename"
++	contentMapperSemanticTokensRegistrationID     = "content-mapper-semantic-tokens"
+ )
+ 
+ func (s *Server) supportsContentMapperRegistration(id string) bool {
+@@ -342,6 +343,8 @@ func (s *Server) supportsContentMapperRegistration(id string) bool {
+ 		return s.clientCapabilities.TextDocument.Completion.DynamicRegistration
+ 	case contentMapperRenameRegistrationID:
+ 		return s.clientCapabilities.TextDocument.Rename.DynamicRegistration
++	case contentMapperSemanticTokensRegistrationID:
++		return s.clientCapabilities.TextDocument.SemanticTokens.DynamicRegistration
+ 	default:
+ 		return false
+ 	}
+@@ -374,6 +377,7 @@ func (s *Server) RegisterContentMapperExtensions(ctx context.Context, extensions
+ 			{Id: contentMapperDocumentHighlightRegistrationID, Method: string(lsproto.MethodTextDocumentDocumentHighlight)},
+ 			{Id: contentMapperCompletionRegistrationID, Method: string(lsproto.MethodTextDocumentCompletion)},
+ 			{Id: contentMapperRenameRegistrationID, Method: string(lsproto.MethodTextDocumentRename)},
++			{Id: contentMapperSemanticTokensRegistrationID, Method: string(lsproto.MethodTextDocumentSemanticTokens)},
+ 		}
+ 		unregistrations = slices.DeleteFunc(unregistrations, func(registration *lsproto.Unregistration) bool {
+ 			return !s.supportsContentMapperRegistration(registration.Id)
+@@ -500,6 +504,21 @@ func (s *Server) RegisterContentMapperExtensions(ctx context.Context, extensions
+ 				},
+ 			},
+ 		},
++		{
++			Id: contentMapperSemanticTokensRegistrationID,
++			RegisterOptions: &lsproto.RegisterOptions{
++				TextDocumentSemanticTokens: &lsproto.SemanticTokensRegistrationOptions{
++					DocumentSelector: selector,
++					Legend:           ls.SemanticTokensLegend(s.clientCapabilities.TextDocument.SemanticTokens),
++					Full: &lsproto.BooleanOrSemanticTokensFullDelta{
++						Boolean: new(true),
++					},
++					Range: &lsproto.BooleanOrEmptyObject{
++						Boolean: new(true),
++					},
++				},
++			},
++		},
+ 	}
+ 	registrations = slices.DeleteFunc(registrations, func(registration *lsproto.Registration) bool {
+ 		return !s.supportsContentMapperRegistration(registration.Id)
+diff --git a/package-lock.json b/package-lock.json
+index 8d4c6de04..3da3aeaee 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -359,9 +359,6 @@
+                 "arm64"
+             ],
+             "dev": true,
+-            "libc": [
+-                "glibc"
+-            ],
+             "license": "MIT",
+             "optional": true,
+             "os": [
+@@ -376,9 +373,6 @@
+                 "arm64"
+             ],
+             "dev": true,
+-            "libc": [
+-                "musl"
+-            ],
+             "license": "MIT",
+             "optional": true,
+             "os": [
+@@ -393,9 +387,6 @@
+                 "loong64"
+             ],
+             "dev": true,
+-            "libc": [
+-                "glibc"
+-            ],
+             "license": "MIT",
+             "optional": true,
+             "os": [
+@@ -410,9 +401,6 @@
+                 "loong64"
+             ],
+             "dev": true,
+-            "libc": [
+-                "musl"
+-            ],
+             "license": "MIT",
+             "optional": true,
+             "os": [
+@@ -427,9 +415,6 @@
+                 "ppc64"
+             ],
+             "dev": true,
+-            "libc": [
+-                "glibc"
+-            ],
+             "license": "MIT",
+             "optional": true,
+             "os": [
+@@ -444,9 +429,6 @@
+                 "ppc64"
+             ],
+             "dev": true,
+-            "libc": [
+-                "musl"
+-            ],
+             "license": "MIT",
+             "optional": true,
+             "os": [
+@@ -461,9 +443,6 @@
+                 "riscv64"
+             ],
+             "dev": true,
+-            "libc": [
+-                "glibc"
+-            ],
+             "license": "MIT",
+             "optional": true,
+             "os": [
+@@ -478,9 +457,6 @@
+                 "x64"
+             ],
+             "dev": true,
+-            "libc": [
+-                "glibc"
+-            ],
+             "license": "MIT",
+             "optional": true,
+             "os": [
+@@ -495,9 +471,6 @@
+                 "x64"
+             ],
+             "dev": true,
+-            "libc": [
+-                "musl"
+-            ],
+             "license": "MIT",
+             "optional": true,
+             "os": [
+-- 
+2.53.0
+

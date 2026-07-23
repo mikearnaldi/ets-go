@@ -15,6 +15,12 @@ git fetch origin "pull/${PR_NUMBER}/head:${BRANCH}"
 git checkout "${BRANCH}"
 git pull --ff-only origin "pull/${PR_NUMBER}/head" || true
 
+# Apply local patches (see ../patches/) on top of the PR branch.
+if [ -d ../patches ] && compgen -G "../patches/*.patch" > /dev/null; then
+  git checkout -B ets-patches
+  git am --3way ../patches/*.patch
+fi
+
 go build -o built/local/tsgo ./cmd/tsgo
 echo "Built: $(pwd)/built/local/tsgo"
 
