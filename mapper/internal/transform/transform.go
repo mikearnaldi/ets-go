@@ -1,12 +1,21 @@
 // Package transform compiles ETS source text into TypeScript text plus a
 // span map between the two, using the vendored ETS-aware scanner and parser.
 //
-// The pipeline currently performs a full parse (exercising the vendored
-// parser end-to-end) and emits the input verbatim with a whole-file mapping.
-// ETS constructs will be rewritten here as the language is designed.
+// The pipeline:
+//
+//  1. Parse the .ets source with etsparser (typescript-go's parser, extended
+//     with ETS productions as the language is designed).
+//  2. Walk the AST, emitting the output as a sequence of segments: verbatim
+//     slices of the original source, synthesized scaffolding, and atom/alias
+//     replacements. Positions are byte offsets end-to-end (the negotiated
+//     position encoding is utf-8), so AST spans map directly.
+//  3. The emitter assembles the final text and the span map tuples from the
+//     segments; gaps between mappings are synthesized content by definition.
 package transform
 
 import (
+	"strings"
+
 	"github.com/microsoft/typescript-go/etsmapper/internal/protocol"
 	"github.com/microsoft/typescript-go/etsmapper/etsparser"
 	"github.com/microsoft/typescript-go/internal/ast"
@@ -21,23 +30,111 @@ const (
 	spanMapKindAlias    = 2
 )
 
-// Transform compiles one .ets file. Positions in the result use the
-// position encoding negotiated at initialize (utf-8, i.e. byte offsets).
+// Transform compiles one .ets file.
 func Transform(params protocol.TransformParams) (protocol.TransformResult, error) {
-	// Parse with the ETS-aware parser. Parse errors are intentionally not
-	// reported here: TypeScript will diagnose the transformed text itself,
-	// and ETS-level syntax errors will become mapper-authored diagnostics
-	// once the ETS grammar lands.
-	_ = etsparser.ParseSourceFile(ast.SourceFileParseOptions{
+	file := etsparser.ParseSourceFile(ast.SourceFileParseOptions{
 		FileName: params.FileName,
 	}, params.Content, core.ScriptKindTS)
 
-	text := params.Content
+	e := newEmitter(params.Content)
+	emitSourceFile(e, file)
+	text, mappings := e.finish()
+
 	return protocol.TransformResult{
 		Text:       text,
 		ScriptKind: scriptKindTS,
-		Mappings: []protocol.SpanMapping{
-			protocol.NewSpanMapping(0, int32(len(text)), 0, int32(len(params.Content)), spanMapKindVerbatim),
-		},
+		Mappings:   mappings,
 	}, nil
+}
+
+// emitter accumulates output text and span mappings segment by segment.
+type emitter struct {
+	src       string
+	out       strings.Builder
+	mappings  []protocol.SpanMapping
+	genOffset int
+}
+
+func newEmitter(src string) *emitter {
+	return &emitter{src: src}
+}
+
+// verbatim emits src[start:end] unchanged, mapped one-to-one.
+func (e *emitter) verbatim(start, end int) {
+	if start >= end {
+		return
+	}
+	e.out.WriteString(e.src[start:end])
+	e.appendMapping(spanMapKindVerbatim, int32(e.genOffset), int32(end-start), int32(start), int32(end-start))
+	e.genOffset += end - start
+}
+
+// atom emits text as a replacement for the original span src[start:end].
+func (e *emitter) atom(start, end int, text string) {
+	if text == "" {
+		return
+	}
+	e.out.WriteString(text)
+	e.appendMapping(spanMapKindAtom, int32(e.genOffset), int32(len(text)), int32(start), int32(end-start))
+	e.genOffset += len(text)
+}
+
+// alias is like atom, but diagnostics display the original text of the span.
+func (e *emitter) alias(start, end int, text string) {
+	if text == "" {
+		return
+	}
+	e.out.WriteString(text)
+	e.appendMapping(spanMapKindAlias, int32(e.genOffset), int32(len(text)), int32(start), int32(end-start))
+	e.genOffset += len(text)
+}
+
+// synthesize emits text with no corresponding location in the original
+// source (a gap in the span map).
+func (e *emitter) synthesize(text string) {
+	if text == "" {
+		return
+	}
+	e.out.WriteString(text)
+	e.genOffset += len(text)
+}
+
+func (e *emitter) appendMapping(kind int32, genStart, genLength, origStart, origLength int32) {
+	// Coalesce adjacent verbatim segments that are contiguous on both sides.
+	if kind == spanMapKindVerbatim && len(e.mappings) > 0 {
+		last := e.mappings[len(e.mappings)-1]
+		if last[4] == spanMapKindVerbatim &&
+			last[0]+last[1] == genStart &&
+			last[2]+last[3] == origStart {
+			last[1] += genLength
+			last[3] += origLength
+			e.mappings[len(e.mappings)-1] = last
+			return
+		}
+	}
+	e.mappings = append(e.mappings, protocol.NewSpanMapping(genStart, genLength, origStart, origLength, kind))
+}
+
+func (e *emitter) finish() (string, []protocol.SpanMapping) {
+	return e.out.String(), e.mappings
+}
+
+// emitSourceFile walks top-level statements. cursor tracks the original
+// offset up to which output has been emitted; each handler returns the new
+// cursor. Trivia between statements is swallowed into verbatim segments.
+func emitSourceFile(e *emitter, file *ast.SourceFile) {
+	cursor := 0
+	for _, stmt := range file.Statements.Nodes {
+		cursor = emitStatement(e, cursor, stmt)
+	}
+	e.verbatim(cursor, len(e.src))
+}
+
+func emitStatement(e *emitter, cursor int, stmt *ast.Node) int {
+	switch stmt.Kind {
+	// ETS construct kinds are dispatched here as the grammar lands.
+	default:
+		e.verbatim(cursor, stmt.End())
+		return stmt.End()
+	}
 }
