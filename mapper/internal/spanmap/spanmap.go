@@ -304,7 +304,9 @@ func (m *SpanMap) AliasForGeneratedSpan(r core.TextRange) (Segment, bool) {
 }
 
 // segmentIndexAt returns the index of the segment containing pos and true, or, when pos lies in a gap,
-// the index of the segment immediately before pos (-1 if none) and false.
+// the index of the segment immediately before pos (-1 if none) and false. The end of the last segment
+// counts as contained, so a position at the end of the mapped text (e.g. the cursor at end of file)
+// resolves to that segment rather than to a synthesized gap.
 func (m *SpanMap) segmentIndexAt(pos core.TextPos) (int, bool) {
 	idx, found := slices.BinarySearchFunc(m.segments, pos, func(s Segment, p core.TextPos) int {
 		return int(s.GenStart - p)
@@ -313,7 +315,7 @@ func (m *SpanMap) segmentIndexAt(pos core.TextPos) (int, bool) {
 		return idx, true
 	}
 	prev := idx - 1
-	if prev >= 0 && pos < m.segments[prev].GenEnd {
+	if prev >= 0 && (pos < m.segments[prev].GenEnd || (prev == len(m.segments)-1 && pos == m.segments[prev].GenEnd)) {
 		return prev, true
 	}
 	return prev, false
@@ -535,7 +537,9 @@ func (m *SpanMap) origIndex() []Segment {
 
 // originalSegmentsAt returns the complete duplicate group containing pos from a slice ordered by original
 // start, original end, and generated start. Segment ends are exclusive; a segment start, including a zero-length
-// segment, is considered contained. It finds a candidate in O(log n), then scans only the duplicate group.
+// segment, is considered contained. The end of the last segment counts as contained, so a position at the
+// end of the mapped text (e.g. the cursor at end of file) resolves to that segment's group. It finds a
+// candidate in O(log n), then scans only the duplicate group.
 // The boolean reports whether any group contains pos.
 func originalSegmentsAt(segments []Segment, pos core.TextPos) ([]Segment, bool) {
 	index, found := slices.BinarySearchFunc(segments, pos, func(segment Segment, position core.TextPos) int {
@@ -544,7 +548,8 @@ func originalSegmentsAt(segments []Segment, pos core.TextPos) ([]Segment, bool) 
 	if !found {
 		index--
 	}
-	if index < 0 || !(segments[index].OrigStart == pos || pos < segments[index].OrigEnd) {
+	if index < 0 || !(segments[index].OrigStart == pos || pos < segments[index].OrigEnd ||
+		(index == len(segments)-1 && pos == segments[index].OrigEnd)) {
 		return nil, false
 	}
 	start := index

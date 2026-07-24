@@ -1,0 +1,167 @@
+From cedc80afa61b66cece3982e441490e2412766f25 Mon Sep 17 00:00:00 2001
+From: Michael Arnaldi <michael.arnaldi@effectful.co>
+Date: Fri, 24 Jul 2026 11:09:25 +0200
+Subject: [PATCH] Cover the end of the last segment in spanmap position queries
+
+A position exactly at the end of the final segment (commonly the cursor at
+end of file while typing) was treated as uncovered in both directions:
+OriginalToGeneratedPositions returned no projection and
+GeneratedToOriginalPosition reported FidelityNone. Language features that
+require an exact mapping (completion, hover) therefore silently returned
+nothing at end of file in content-mapped files.
+
+Treat the last segment's end as contained in segmentIndexAt and
+originalSegmentsAt; interior gap boundaries remain uncovered.
+---
+ internal/spanmap/spanmap.go      | 13 +++--
+ internal/spanmap/spanmap_test.go | 92 ++++++++++++++++++++++++++++++++
+ 2 files changed, 101 insertions(+), 4 deletions(-)
+
+diff --git a/internal/spanmap/spanmap.go b/internal/spanmap/spanmap.go
+index 2329cf054..fbdf679bc 100644
+--- a/internal/spanmap/spanmap.go
++++ b/internal/spanmap/spanmap.go
+@@ -304,7 +304,9 @@ func (m *SpanMap) AliasForGeneratedSpan(r core.TextRange) (Segment, bool) {
+ }
+ 
+ // segmentIndexAt returns the index of the segment containing pos and true, or, when pos lies in a gap,
+-// the index of the segment immediately before pos (-1 if none) and false.
++// the index of the segment immediately before pos (-1 if none) and false. The end of the last segment
++// counts as contained, so a position at the end of the mapped text (e.g. the cursor at end of file)
++// resolves to that segment rather than to a synthesized gap.
+ func (m *SpanMap) segmentIndexAt(pos core.TextPos) (int, bool) {
+ 	idx, found := slices.BinarySearchFunc(m.segments, pos, func(s Segment, p core.TextPos) int {
+ 		return int(s.GenStart - p)
+@@ -313,7 +315,7 @@ func (m *SpanMap) segmentIndexAt(pos core.TextPos) (int, bool) {
+ 		return idx, true
+ 	}
+ 	prev := idx - 1
+-	if prev >= 0 && pos < m.segments[prev].GenEnd {
++	if prev >= 0 && (pos < m.segments[prev].GenEnd || (prev == len(m.segments)-1 && pos == m.segments[prev].GenEnd)) {
+ 		return prev, true
+ 	}
+ 	return prev, false
+@@ -535,7 +537,9 @@ func (m *SpanMap) origIndex() []Segment {
+ 
+ // originalSegmentsAt returns the complete duplicate group containing pos from a slice ordered by original
+ // start, original end, and generated start. Segment ends are exclusive; a segment start, including a zero-length
+-// segment, is considered contained. It finds a candidate in O(log n), then scans only the duplicate group.
++// segment, is considered contained. The end of the last segment counts as contained, so a position at the
++// end of the mapped text (e.g. the cursor at end of file) resolves to that segment's group. It finds a
++// candidate in O(log n), then scans only the duplicate group.
+ // The boolean reports whether any group contains pos.
+ func originalSegmentsAt(segments []Segment, pos core.TextPos) ([]Segment, bool) {
+ 	index, found := slices.BinarySearchFunc(segments, pos, func(segment Segment, position core.TextPos) int {
+@@ -544,7 +548,8 @@ func originalSegmentsAt(segments []Segment, pos core.TextPos) ([]Segment, bool)
+ 	if !found {
+ 		index--
+ 	}
+-	if index < 0 || !(segments[index].OrigStart == pos || pos < segments[index].OrigEnd) {
++	if index < 0 || !(segments[index].OrigStart == pos || pos < segments[index].OrigEnd ||
++		(index == len(segments)-1 && pos == segments[index].OrigEnd)) {
+ 		return nil, false
+ 	}
+ 	start := index
+diff --git a/internal/spanmap/spanmap_test.go b/internal/spanmap/spanmap_test.go
+index c8942c2df..848b77097 100644
+--- a/internal/spanmap/spanmap_test.go
++++ b/internal/spanmap/spanmap_test.go
+@@ -511,3 +511,95 @@ func TestValidateNilIsValid(t *testing.T) {
+ 	var m *spanmap.SpanMap
+ 	assert.Assert(t, m.Validate("abc", "abc") == nil)
+ }
++
++func TestOriginalToGeneratedPositionAtEndOfLastSegment(t *testing.T) {
++	t.Parallel()
++
++	// The cursor at the end of the mapped text (e.g. end of file) must resolve to the final
++	// segment, not to an uncovered position, or language features silently return nothing there.
++	m := spanmap.New([]spanmap.Segment{
++		{GenStart: 0, GenEnd: 3, OrigStart: 0, OrigEnd: 3, Kind: spanmap.KindVerbatim, Purpose: spanmap.PurposeAll},
++	})
++
++	positions := m.OriginalToGeneratedPositions(3, spanmap.PurposeSemantic)
++	assert.Equal(t, len(positions), 1)
++	assert.Equal(t, positions[0].Position, core.TextPos(3))
++	assert.Equal(t, positions[0].Fidelity, spanmap.FidelityExact)
++
++	// Positions beyond the mapped text remain uncovered.
++	assert.Equal(t, len(m.OriginalToGeneratedPositions(4, spanmap.PurposeSemantic)), 0)
++}
++
++func TestOriginalToGeneratedPositionAtEndOfLastSegmentDuplicateGroup(t *testing.T) {
++	t.Parallel()
++
++	m := spanmap.New([]spanmap.Segment{
++		{GenStart: 0, GenEnd: 3, OrigStart: 10, OrigEnd: 13, Kind: spanmap.KindVerbatim, Purpose: spanmap.PurposeNavigation},
++		{GenStart: 10, GenEnd: 13, OrigStart: 10, OrigEnd: 13, Kind: spanmap.KindVerbatim, Purpose: spanmap.PurposeSemantic},
++	})
++
++	positions := m.OriginalToGeneratedPositions(13, spanmap.PurposeSemantic)
++	assert.Equal(t, len(positions), 1)
++	assert.Equal(t, positions[0].Position, core.TextPos(13))
++	assert.Equal(t, positions[0].Fidelity, spanmap.FidelityExact)
++
++	positions = m.OriginalToGeneratedPositions(13, spanmap.PurposeNavigation)
++	assert.Equal(t, len(positions), 1)
++	assert.Equal(t, positions[0].Position, core.TextPos(3))
++	assert.Equal(t, positions[0].Fidelity, spanmap.FidelityExact)
++}
++
++func TestOriginalToGeneratedPositionAtInteriorGapBoundary(t *testing.T) {
++	t.Parallel()
++
++	// The end of a non-final segment followed by a gap stays uncovered: the original text in
++	// the gap has no generated counterpart.
++	m := spanmap.New([]spanmap.Segment{
++		{GenStart: 0, GenEnd: 3, OrigStart: 0, OrigEnd: 3, Kind: spanmap.KindVerbatim, Purpose: spanmap.PurposeAll},
++		{GenStart: 10, GenEnd: 13, OrigStart: 6, OrigEnd: 9, Kind: spanmap.KindVerbatim, Purpose: spanmap.PurposeAll},
++	})
++
++	assert.Equal(t, len(m.OriginalToGeneratedPositions(3, spanmap.PurposeSemantic)), 0)
++	assert.Equal(t, len(m.OriginalToGeneratedPositions(5, spanmap.PurposeSemantic)), 0)
++	positions := m.OriginalToGeneratedPositions(9, spanmap.PurposeSemantic)
++	assert.Equal(t, len(positions), 1)
++	assert.Equal(t, positions[0].Position, core.TextPos(13))
++}
++
++func TestGeneratedToOriginalPositionAtEndOfLastSegment(t *testing.T) {
++	t.Parallel()
++
++	m := spanmap.New([]spanmap.Segment{
++		{GenStart: 0, GenEnd: 3, OrigStart: 0, OrigEnd: 3, Kind: spanmap.KindVerbatim, Purpose: spanmap.PurposeAll},
++	})
++
++	pos, fidelity := m.GeneratedToOriginalPosition(3)
++	assert.Equal(t, pos, core.TextPos(3))
++	assert.Equal(t, fidelity, spanmap.FidelityExact)
++
++	r, fidelity := m.GeneratedToOriginalSpan(core.NewTextRange(3, 3))
++	assert.Equal(t, r, core.NewTextRange(3, 3))
++	assert.Equal(t, fidelity, spanmap.FidelityExact)
++
++	// Beyond the end remains synthesized.
++	_, fidelity = m.GeneratedToOriginalPosition(4)
++	assert.Equal(t, fidelity, spanmap.FidelityNone)
++}
++
++func TestGeneratedToOriginalPositionAtInteriorGapBoundary(t *testing.T) {
++	t.Parallel()
++
++	m := spanmap.New([]spanmap.Segment{
++		{GenStart: 0, GenEnd: 3, OrigStart: 0, OrigEnd: 3, Kind: spanmap.KindVerbatim, Purpose: spanmap.PurposeAll},
++		{GenStart: 10, GenEnd: 13, OrigStart: 6, OrigEnd: 9, Kind: spanmap.KindVerbatim, Purpose: spanmap.PurposeAll},
++	})
++
++	// The end of a non-final segment is a synthesized gap boundary, not the segment.
++	pos, fidelity := m.GeneratedToOriginalPosition(3)
++	assert.Equal(t, pos, core.TextPos(3))
++	assert.Equal(t, fidelity, spanmap.FidelityNone)
++
++	pos, fidelity = m.GeneratedToOriginalPosition(13)
++	assert.Equal(t, pos, core.TextPos(9))
++	assert.Equal(t, fidelity, spanmap.FidelityExact)
++}
+-- 
+2.53.0
+
