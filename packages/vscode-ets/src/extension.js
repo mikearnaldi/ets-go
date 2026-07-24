@@ -103,7 +103,7 @@ class EtsRunHoverProvider {
     const typeString = await this.expressionTypeString(document, operandPosition);
     if (typeString) {
       const markdown = new vscode.MarkdownString();
-      markdown.appendCodeblock(typeString, "typescript");
+      markdown.appendCodeblock(`const _: ${typeString}`, "typescript");
       return new vscode.Hover(markdown, wordRange);
     }
     return this.fallbackHover(document, operandPosition);
