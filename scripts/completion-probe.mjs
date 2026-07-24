@@ -4,6 +4,7 @@
 //   node scripts/completion-probe.mjs ["imp"] [line] [character]
 
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
 
@@ -74,6 +75,9 @@ function handleMessage(message) {
     send({ jsonrpc: "2.0", id: message.id, result: null });
     return;
   }
+  if (message.method === "window/logMessage" && process.env.LOG_VERBOSITY) {
+    console.error("[server]", message.params?.message);
+  }
 }
 
 async function main() {
@@ -88,9 +92,11 @@ async function main() {
           completionItem: { snippetSupport: true, labelDetailsSupport: true },
         },
       },
-      workspace: {},
+      workspace: {
+        didChangeWatchedFiles: { dynamicRegistration: true },
+      },
     },
-    initializationOptions: { loadExternalPlugins: true },
+    initializationOptions: { loadExternalPlugins: true, logVerbosity: Number(process.env.LOG_VERBOSITY ?? 3) },
     workspaceFolders: [{ uri: url.pathToFileURL(projectDir).href, name: "playground" }],
   });
   notify("initialized", {});
@@ -166,6 +172,51 @@ async function main() {
     await probe("a.ets", "ets", { openText: content });
   } else if (mode === "fullchange") {
     await probe("a.ets", "ets", { openText: "", changes: [{ text: content }] });
+  } else if (mode === "create") {
+    // Simulate creating a brand-new file while the server is already running:
+    // project loads first, then the file appears on disk, then it is opened and typed in.
+    await new Promise((r) => setTimeout(r, 3000));
+    const create = async (fileName, languageId) => {
+      const filePath = path.join(projectDir, "src", fileName);
+      fs.writeFileSync(filePath, "");
+      try {
+        const uri = url.pathToFileURL(filePath).href;
+        notify("workspace/didChangeWatchedFiles", { changes: [{ uri, type: 1 }] });
+        await new Promise((r) => setTimeout(r, 1000));
+        notify("textDocument/didOpen", {
+          textDocument: { uri, languageId, version: 1, text: "" },
+        });
+        // The vscode-ets extension's first-wake handshake.
+        const discovered = await call("custom/discoverContentMappers", {
+          textDocuments: [{ uri }],
+          extensions: [".ets"],
+        });
+        console.error(`${fileName}: discoverContentMappers ->`, JSON.stringify(discovered));
+        for (const change of incremental) {
+          notify("textDocument/didChange", {
+            textDocument: { uri, version: 2 },
+            contentChanges: [change],
+          });
+          await new Promise((r) => setTimeout(r, 300));
+        }
+        await new Promise((r) => setTimeout(r, 2000));
+        try {
+          const result = await call("textDocument/completion", {
+            textDocument: { uri },
+            position: { line, character },
+            context: { triggerKind: 1 },
+          });
+          const items = Array.isArray(result) ? result : (result?.items ?? []);
+          console.error(`${fileName}: completion@${line}:${character} =`, result === null ? "null" : `${items.length} items`);
+        } catch (err) {
+          console.error(`${fileName}: completion failed: ${err.message}`);
+        }
+      } finally {
+        fs.unlinkSync(filePath);
+      }
+    };
+    await create("created.ts", "typescript");
+    await create("created.ets", "ets");
   }
 
   child.kill();

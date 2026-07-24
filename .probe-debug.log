@@ -1,0 +1,623 @@
+[server] Resolved client capabilities: {
+	"workspace": {
+		"didChangeWatchedFiles": {
+			"dynamicRegistration": true
+		}
+	},
+	"textDocument": {
+		"synchronization": {
+			"dynamicRegistration": true
+		},
+		"completion": {
+			"dynamicRegistration": true,
+			"completionItem": {
+				"snippetSupport": true,
+				"labelDetailsSupport": true
+			}
+		}
+	}
+}
+[server] file watching: using LSP client-side watching (client supports dynamic registration)
+registerCapability: [{"id":"typescript-config-watch-id","method":"workspace/didChangeConfiguration"}]
+[server] handled method 'initialized' in 323.166µs
+[server] Scheduling new diagnostics refresh...
+[server] handled method 'workspace/didChangeWatchedFiles' in 60.083µs
+[server] Running scheduled diagnostics refresh
+[server] Processed 2 file changes in 25.458µs
+[server] handled method 'textDocument/didOpen' in 28.928083ms
+[server] Adopted snapshot 1 (parent 0) as current session snapshot (replacing 0)
+[server] handled method 'custom/discoverContentMappers' (2) in 57.709µs
+[server] ======== Cloning snapshot 0 ========
+[11:57:41.857] Reason: DidOpenFile - file:///Users/michaelarnaldi/repositories/ets-go/playground/src/created.ts
+[11:57:41.858] DidChangeCustomConfigFileName
+[11:57:41.858] DidChangeFiles
+	[11:57:41.858] Checking for changes affecting config files
+		[11:57:41.858] Summarizing file changes
+		[11:57:41.858] Checking if any changed files are config files
+	[11:57:41.858] computeConfigFileName:: File: /Users/michaelarnaldi/repositories/ets-go/playground/src/created.ts:: Result: /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json
+	[11:57:41.858] Searching for default configured project for /Users/michaelarnaldi/repositories/ets-go/playground/src/created.ts
+		[11:57:41.858] Acquiring config for open file
+			[11:57:41.859] Loading config file: /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json
+			[11:57:41.859] Finished loading config file
+		[11:57:41.859] Creating ConfiguredProject: /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json, currentDirectory: /Users/michaelarnaldi/repositories/ets-go/playground
+		[11:57:41.859] Acquiring config for project
+		[11:57:41.859] CompilerHost
+		[11:57:41.886] Program update for /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json completed in 26.33375ms
+		[11:57:41.886] Project contains file directly
+	[11:57:41.886] Found default configured project for /Users/michaelarnaldi/repositories/ets-go/playground/src/created.ts: /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json (in 27.221667ms)
+[11:57:41.886] DidRequestFile
+	[11:57:41.886] Acquiring config for project
+[11:57:41.886] Removed 2 cached file(s) in 81.458µs
+[11:57:41.886] UpdateAutoImports
+	[11:57:41.886] Building autoimport registry
+		[11:57:41.886] Added project: /users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json
+		[11:57:41.886] Added directory: /users/michaelarnaldi/repositories
+		[11:57:41.886] Added directory: /users/michaelarnaldi
+		[11:57:41.886] Added directory: /users
+		[11:57:41.886] Added directory: /
+		[11:57:41.886] Added directory: /users/michaelarnaldi/repositories/ets-go/playground/src
+		[11:57:41.886] Added directory: /users/michaelarnaldi/repositories/ets-go/playground
+		[11:57:41.886] Added directory: /users/michaelarnaldi/repositories/ets-go
+		[11:57:41.886] Added node_modules bucket: /users/michaelarnaldi/repositories/ets-go
+		[11:57:41.886] Updated buckets and directories in 158.583µs
+		[11:57:41.886] Built autoimport registry in 162.291µs
+[11:57:41.886] Finished cloning snapshot 0 into snapshot 1 in 28.555459ms
+
+created.ts: discoverContentMappers -> {"extensions":[]}
+[server] 
+Project '/Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json'
+	Files (214)
+		bundled:///libs/lib.es5.d.ts
+		bundled:///libs/lib.es2015.d.ts
+		bundled:///libs/lib.es2016.d.ts
+		bundled:///libs/lib.es2017.d.ts
+		bundled:///libs/lib.es2018.d.ts
+		bundled:///libs/lib.es2019.d.ts
+		bundled:///libs/lib.es2020.d.ts
+		bundled:///libs/lib.es2021.d.ts
+		bundled:///libs/lib.es2022.d.ts
+		bundled:///libs/lib.es2015.core.d.ts
+		bundled:///libs/lib.es2015.collection.d.ts
+		bundled:///libs/lib.es2015.generator.d.ts
+		bundled:///libs/lib.es2015.iterable.d.ts
+		bundled:///libs/lib.es2015.promise.d.ts
+		bundled:///libs/lib.es2015.proxy.d.ts
+		bundled:///libs/lib.es2015.reflect.d.ts
+		bundled:///libs/lib.es2015.symbol.d.ts
+		bundled:///libs/lib.es2015.symbol.wellknown.d.ts
+		bundled:///libs/lib.es2016.array.include.d.ts
+		bundled:///libs/lib.es2016.intl.d.ts
+		bundled:///libs/lib.es2017.arraybuffer.d.ts
+		bundled:///libs/lib.es2017.date.d.ts
+		bundled:///libs/lib.es2017.object.d.ts
+		bundled:///libs/lib.es2017.sharedmemory.d.ts
+		bundled:///libs/lib.es2017.string.d.ts
+		bundled:///libs/lib.es2017.intl.d.ts
+		bundled:///libs/lib.es2017.typedarrays.d.ts
+		bundled:///libs/lib.es2018.asyncgenerator.d.ts
+		bundled:///libs/lib.es2018.asynciterable.d.ts
+		bundled:///libs/lib.es2018.intl.d.ts
+		bundled:///libs/lib.es2018.promise.d.ts
+		bundled:///libs/lib.es2018.regexp.d.ts
+		bundled:///libs/lib.es2019.array.d.ts
+		bundled:///libs/lib.es2019.object.d.ts
+		bundled:///libs/lib.es2019.string.d.ts
+		bundled:///libs/lib.es2019.symbol.d.ts
+		bundled:///libs/lib.es2019.intl.d.ts
+		bundled:///libs/lib.es2020.bigint.d.ts
+		bundled:///libs/lib.es2020.date.d.ts
+		bundled:///libs/lib.es2020.promise.d.ts
+		bundled:///libs/lib.es2020.sharedmemory.d.ts
+		bundled:///libs/lib.es2020.string.d.ts
+		bundled:///libs/lib.es2020.symbol.wellknown.d.ts
+		bundled:///libs/lib.es2020.intl.d.ts
+		bundled:///libs/lib.es2020.number.d.ts
+		bundled:///libs/lib.es2021.promise.d.ts
+		bundled:///libs/lib.es2021.string.d.ts
+		bundled:///libs/lib.es2021.weakref.d.ts
+		bundled:///libs/lib.es2021.intl.d.ts
+		bundled:///libs/lib.es2022.array.d.ts
+		bundled:///libs/lib.es2022.error.d.ts
+		bundled:///libs/lib.es2022.intl.d.ts
+		bundled:///libs/lib.es2022.object.d.ts
+		bundled:///libs/lib.es2022.string.d.ts
+		bundled:///libs/lib.es2022.regexp.d.ts
+		bundled:///libs/lib.decorators.d.ts
+		bundled:///libs/lib.decorators.legacy.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/playground/src/created.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Types.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/HKT.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Function.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Ordering.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Order.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Combiner.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Reducer.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Equivalence.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Hash.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Equal.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Inspectable.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Pipeable.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Context.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Predicate.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Unify.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Utils.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Result.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Exit.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/LogLevel.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Duration.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/@standard-schema/spec/dist/index.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/BigDecimal.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/NonEmptyIterable.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Chunk.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Deferred.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Latch.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/MutableList.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/MutableRef.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Scope.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/PubSub.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Pull.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Scheduler.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Queue.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Cron.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Schedule.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Take.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Tracer.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Channel.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/ExecutionPlan.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Sink.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Stream.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Layer.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/DateTime.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Differ.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Formatter.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/HashMap.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/HashSet.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/JsonPatch.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/JsonSchema.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/SchemaIssue.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/SchemaGetter.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/SchemaTransformation.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/SchemaAST.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Optic.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Redacted.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/SchemaError.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/SchemaParser.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/SchemaRepresentation.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Struct.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/pure-rand/lib/esm/RandomGenerator-DcXj09Ch.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/pure-rand/lib/esm/types/RandomGenerator.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/pure-rand/lib/esm/types/JumpableRandomGenerator.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/fast-check/lib/fast-check.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/testing/FastCheck.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Schema.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Brand.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Data.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/PlatformError.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/FileSystem.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Logger.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Record.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/References.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Fiber.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Cause.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Clock.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Metric.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Request.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/MutableHashMap.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Cache.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/PrimaryKey.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/unstable/reactivity/Reactivity.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/unstable/sql/SqlError.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/unstable/sql/SqlConnection.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/unstable/sql/Statement.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/unstable/sql/SqlClient.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Path.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/unstable/persistence/KeyValueStore.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/unstable/persistence/Redis.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/unstable/persistence/Persistence.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/unstable/persistence/Persistable.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/RequestResolver.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxRef.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Effect.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Filter.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Option.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Array.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/BigInt.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Boolean.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/ChannelSchema.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/ConfigProvider.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Config.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Console.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Crypto.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Effectable.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Encoding.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/ErrorReporter.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/FiberHandle.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/FiberMap.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/FiberSet.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Graph.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/HashRing.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Iterable.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/JsonPointer.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/RcMap.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/LayerMap.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/RcRef.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/LayerRef.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/ManagedRuntime.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Match.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/MutableHashSet.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Newtype.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Number.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/PartitionedSemaphore.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Semaphore.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Pool.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Random.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Redactable.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Ref.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/RegExp.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/SynchronizedRef.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/ScopedRef.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Resource.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Runtime.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/SchemaUtils.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/ScopedCache.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Stdio.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/String.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/SubscriptionRef.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Symbol.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Terminal.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Trie.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/Tuple.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxChunk.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxDeferred.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxHashMap.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxHashSet.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxPriorityQueue.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxQueue.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxPubSub.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxReentrantLock.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxSemaphore.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/TxSubscriptionRef.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/UndefinedOr.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/node_modules/effect/dist/index.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/playground/src/hello.ets
+		/Users/michaelarnaldi/repositories/ets-go/playground/src/index.ts
+-----------------------------------------------
+[server] 
+======== Cache Statistics ========
+[server] Open file count:        1
+[server] Cached disk files:    219
+[server] Realpath aliases:       0
+[server] Project count:          1
+[server] Config count:           1
+[server] Parse cache size:              214
+[server] Program count:                   1
+[server] Extended config cache size:      0
+[server] Auto Imports:
+[server] 	Unique packages (by realpath): 0
+[server] 	Project buckets:
+[server] 		/users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json (dirty):
+[server] 			Files: 0
+[server] 			Exports: 0
+[server] 	node_modules buckets:
+[server] 		/users/michaelarnaldi/repositories/ets-go (dirty):
+[server] 			Collected packages: all, due to no package.json!
+[server] 			Total packages: 0
+[server] 			Files: 0
+[server] 			Exports: 0
+[server] 			Recursive search: all
+[server] 
+registerCapability: [{"id":"root files for /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json watcher 7.0","method":"workspace/didChangeWatchedFiles"}]
+[server] handled method 'textDocument/didChange' in 30.667µs
+[server] Added new watch: root files for /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json watcher 7.0
+[server] 	/Users/michaelarnaldi/repositories/ets-go/playground/**/*
+[server] 
+registerCapability: [{"id":"program files for /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json watcher 8.0","method":"workspace/didChangeWatchedFiles"}]
+[server] Added new watch: program files for /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json watcher 8.0
+[server] 	/users/michaelarnaldi/repositories/ets-go/node_modules/**/*
+[server] 
+registerCapability: [{"id":"program files for /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json watcher 8.1","method":"workspace/didChangeWatchedFiles"}]
+[server] Added new watch: program files for /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json watcher 8.1
+[server] 	/users/michaelarnaldi/repositories/ets-go/playground/**/*
+[server] 
+registerCapability: [{"id":"program files for /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json watcher 8.2","method":"workspace/didChangeWatchedFiles"}]
+[server] Added new watch: program files for /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json watcher 8.2
+[server] 	bundled:///libs/**/*
+[server] 
+registerCapability: [{"id":"auto-import watcher 9.0","method":"workspace/didChangeWatchedFiles"}]
+[server] Updated watch: auto-import watcher 9.0
+[server] 	/Users/michaelarnaldi/repositories/ets-go/node_modules/**/*
+[server] 
+[server] Updated watches in 1.805875ms
+registerCapability: [{"id":"content-mapper-did-open","method":"textDocument/didOpen"},{"id":"content-mapper-did-change","method":"textDocument/didChange"},{"id":"content-mapper-did-close","method":"textDocument/didClose"},{"id":"content-mapper-completion","method":"textDocument/completion"}]
+[server] handled method 'textDocument/didChange' in 30.875µs
+[server] handled method 'textDocument/didChange' in 28.041µs
+[server] Processed 3 file changes in 16.458µs
+[server] Adopted snapshot 2 (parent 1) as current session snapshot (replacing 1)
+[server] ======== Cloning snapshot 1 ========
+[11:57:44.791] Reason: RequestedLanguageService (pending file changes) -  Documents: [file:///Users/michaelarnaldi/repositories/ets-go/playground/src/created.ts]
+[11:57:44.791] DidChangeCustomConfigFileName
+[11:57:44.791] DidChangeFiles
+	[11:57:44.791] Checking for changes affecting config files
+		[11:57:44.791] Summarizing file changes
+		[11:57:44.791] Checking if any changed files are config files
+	[11:57:44.791] Marking project /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json as dirty due to changes in /users/michaelarnaldi/repositories/ets-go/playground/src/created.ts
+[11:57:44.791] DidRequestFile
+	[11:57:44.791] Acquiring config for project
+	[11:57:44.791] CompilerHost
+	[11:57:44.791] Program update for /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json completed in 173.333µs
+[11:57:44.791] UpdateAutoImports
+	[11:57:44.791] Building autoimport registry
+		[11:57:44.791] Updated buckets and directories in 40.959µs
+		[11:57:44.791] Built autoimport registry in 49.583µs
+[11:57:44.791] Finished cloning snapshot 1 into snapshot 2 in 262.125µs
+
+[server] 
+======== Cache Statistics ========
+[server] Open file count:        1
+[server] Cached disk files:    219
+[server] Realpath aliases:       0
+[server] Project count:          1
+[server] Config count:           1
+[server] Parse cache size:              214
+[server] Program count:                   1
+[server] Extended config cache size:      0
+[server] Auto Imports:
+[server] 	Unique packages (by realpath): 0
+[server] 	Project buckets:
+[server] 		/users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json (dirty):
+[server] 			Files: 0
+[server] 			Exports: 0
+[server] 	node_modules buckets:
+[server] 		/users/michaelarnaldi/repositories/ets-go (dirty):
+[server] 			Collected packages: all, due to no package.json!
+[server] 			Total packages: 0
+[server] 			Files: 0
+[server] 			Exports: 0
+[server] 			Recursive search: all
+[server] 
+[server] Updated watches in 22.417µs
+[server] Adopted snapshot 4 (parent 2) as current session snapshot (replacing 2)
+[server] ======== Cloning snapshot 2 ========
+[11:57:44.792] DidChangeCustomConfigFileName
+[11:57:44.792] DidRequestFile
+	[11:57:44.792] Acquiring config for project
+[11:57:44.792] UpdateAutoImports
+	[11:57:44.792] Building autoimport registry
+		[11:57:44.792] Updated buckets and directories in 31.792µs
+		[11:57:44.792] Building node_modules indexes
+			[11:57:44.792] Discovered packages: 322.667µs
+			[11:57:44.816] Extracted exports: 23.350041ms (2 packages)
+			[11:57:44.816] /Users/michaelarnaldi/repositories/ets-go
+				[11:57:44.817] Installed 7133 exports (642 used checker)
+				[11:57:44.817] Built index: 1.095791ms
+			[11:57:44.817] Total: 24.864875ms
+		[11:57:44.816] Building project bucket /users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json
+			[11:57:44.816] Extracted exports: 458.334µs (5 exports, 0 used checker, 3 created checkers)
+			[11:57:44.816] Built index: 7.541µs
+			[11:57:44.816] Bucket total: 466.5µs
+		[11:57:44.817] Built autoimport registry in 24.906458ms
+[11:57:44.817] Finished cloning snapshot 2 into snapshot 4 in 25.093167ms
+
+[server] Discarded snapshot 3 (parent 2); session has moved on to snapshot 4
+[server] --- Discarded snapshot 3 builder logs (NOT adopted) ---
+[server] ======== Cloning snapshot 2 ========
+[11:57:44.791] DidChangeCustomConfigFileName
+[11:57:44.791] DidRequestFile
+	[11:57:44.791] Acquiring config for project
+[11:57:44.791] UpdateAutoImports
+	[11:57:44.791] Building autoimport registry
+		[11:57:44.792] Updated buckets and directories in 70.708µs
+		[11:57:44.792] Building node_modules indexes
+			[11:57:44.792] Discovered packages: 395.291µs
+			[11:57:44.816] Extracted exports: 23.672042ms (2 packages)
+			[11:57:44.816] /Users/michaelarnaldi/repositories/ets-go
+				[11:57:44.817] Installed 7133 exports (644 used checker)
+				[11:57:44.817] Built index: 1.140542ms
+			[11:57:44.817] Total: 25.30775ms
+		[11:57:44.816] Building project bucket /users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json
+			[11:57:44.816] Extracted exports: 445.625µs (5 exports, 0 used checker, 3 created checkers)
+			[11:57:44.816] Built index: 10.625µs
+			[11:57:44.816] Bucket total: 456.75µs
+		[11:57:44.817] Built autoimport registry in 25.4645ms
+[11:57:44.817] Finished cloning snapshot 2 into snapshot 3 in 25.650208ms
+
+[server] --- End discarded snapshot 3 builder logs ---
+[server] handled method 'textDocument/completion' (3) in 26.609375ms
+created.ts: completion@0:3 = 184 items
+[server] Scheduling new diagnostics refresh...
+[server] handled method 'workspace/didChangeWatchedFiles' in 13.791µs
+[server] Running scheduled diagnostics refresh
+[server] Processed 2 file changes in 12.958µs
+DEBUG-INFERRED roots: 1 mappers: 1
+[server] handled method 'textDocument/didOpen' in 21.908958ms
+[server] Adopted snapshot 5 (parent 4) as current session snapshot (replacing 4)
+[server] ======== Cloning snapshot 4 ========
+[11:57:45.820] Reason: DidOpenFile - file:///Users/michaelarnaldi/repositories/ets-go/playground/src/created.ets
+[11:57:45.820] DidChangeCustomConfigFileName
+[11:57:45.820] DidChangeFiles
+	[11:57:45.820] Checking for changes affecting config files
+		[11:57:45.820] Summarizing file changes
+		[11:57:45.820] Checking if any changed files are config files
+		[11:57:45.820] Checking if any of 1 created files match root files for config /users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json
+	[11:57:45.820] computeConfigFileName:: File: /Users/michaelarnaldi/repositories/ets-go/playground/src/created.ets:: Result: /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json
+	[11:57:45.820] Searching for default configured project for /Users/michaelarnaldi/repositories/ets-go/playground/src/created.ets
+		[11:57:45.820] Acquiring config for open file
+		[11:57:45.820] Creating ConfiguredProject: /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json, currentDirectory: /Users/michaelarnaldi/repositories/ets-go/playground
+		[11:57:45.820] Acquiring config for project
+		[11:57:45.820] Project does not contain file
+		[11:57:45.820] computeConfigFileName:: File: /Users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json:: Result: 
+	[11:57:45.820] No default configured project found for /Users/michaelarnaldi/repositories/ets-go/playground/src/created.ets (searched in 73.084µs)
+	[11:57:45.820] Creating InferredProject: /dev/null/inferred, currentDirectory: /Users/michaelarnaldi/repositories/ets-go/playground
+[11:57:45.820] DidRequestFile
+	[11:57:45.820] Acquiring config for project
+	[11:57:45.820] CompilerHost
+	[11:57:45.841] Program update for /dev/null/inferred completed in 21.378958ms
+	[11:57:45.841] Completed file request for /Users/michaelarnaldi/repositories/ets-go/playground/src/created.ets in 21.388333ms
+[11:57:45.841] Removed 0 cached file(s) in 74.416µs
+[11:57:45.841] UpdateAutoImports
+	[11:57:45.841] Building autoimport registry
+		[11:57:45.841] Added project: /dev/null/inferred
+		[11:57:45.842] Updated buckets and directories in 56.208µs
+		[11:57:45.842] Built autoimport registry in 61.708µs
+[11:57:45.842] Finished cloning snapshot 4 into snapshot 5 in 21.849458ms
+
+[server] handled method 'custom/discoverContentMappers' (4) in 42.833µs
+[server] 
+Project '/dev/null/inferred'
+	Files (83)
+		bundled:///libs/lib.es5.d.ts
+		bundled:///libs/lib.es2015.d.ts
+		bundled:///libs/lib.es2016.d.ts
+		bundled:///libs/lib.es2017.d.ts
+		bundled:///libs/lib.es2018.d.ts
+		bundled:///libs/lib.es2019.d.ts
+		bundled:///libs/lib.es2020.d.ts
+		bundled:///libs/lib.es2021.d.ts
+		bundled:///libs/lib.es2022.d.ts
+		bundled:///libs/lib.es2023.d.ts
+		bundled:///libs/lib.es2024.d.ts
+		bundled:///libs/lib.es2025.d.ts
+		bundled:///libs/lib.dom.d.ts
+		bundled:///libs/lib.dom.iterable.d.ts
+		bundled:///libs/lib.dom.asynciterable.d.ts
+		bundled:///libs/lib.webworker.importscripts.d.ts
+		bundled:///libs/lib.scripthost.d.ts
+		bundled:///libs/lib.es2015.core.d.ts
+		bundled:///libs/lib.es2015.collection.d.ts
+		bundled:///libs/lib.es2015.generator.d.ts
+		bundled:///libs/lib.es2015.iterable.d.ts
+		bundled:///libs/lib.es2015.promise.d.ts
+		bundled:///libs/lib.es2015.proxy.d.ts
+		bundled:///libs/lib.es2015.reflect.d.ts
+		bundled:///libs/lib.es2015.symbol.d.ts
+		bundled:///libs/lib.es2015.symbol.wellknown.d.ts
+		bundled:///libs/lib.es2016.array.include.d.ts
+		bundled:///libs/lib.es2016.intl.d.ts
+		bundled:///libs/lib.es2017.arraybuffer.d.ts
+		bundled:///libs/lib.es2017.date.d.ts
+		bundled:///libs/lib.es2017.object.d.ts
+		bundled:///libs/lib.es2017.sharedmemory.d.ts
+		bundled:///libs/lib.es2017.string.d.ts
+		bundled:///libs/lib.es2017.intl.d.ts
+		bundled:///libs/lib.es2017.typedarrays.d.ts
+		bundled:///libs/lib.es2018.asyncgenerator.d.ts
+		bundled:///libs/lib.es2018.asynciterable.d.ts
+		bundled:///libs/lib.es2018.intl.d.ts
+		bundled:///libs/lib.es2018.promise.d.ts
+		bundled:///libs/lib.es2018.regexp.d.ts
+		bundled:///libs/lib.es2019.array.d.ts
+		bundled:///libs/lib.es2019.object.d.ts
+		bundled:///libs/lib.es2019.string.d.ts
+		bundled:///libs/lib.es2019.symbol.d.ts
+		bundled:///libs/lib.es2019.intl.d.ts
+		bundled:///libs/lib.es2020.bigint.d.ts
+		bundled:///libs/lib.es2020.date.d.ts
+		bundled:///libs/lib.es2020.promise.d.ts
+		bundled:///libs/lib.es2020.sharedmemory.d.ts
+		bundled:///libs/lib.es2020.string.d.ts
+		bundled:///libs/lib.es2020.symbol.wellknown.d.ts
+		bundled:///libs/lib.es2020.intl.d.ts
+		bundled:///libs/lib.es2020.number.d.ts
+		bundled:///libs/lib.es2021.promise.d.ts
+		bundled:///libs/lib.es2021.string.d.ts
+		bundled:///libs/lib.es2021.weakref.d.ts
+		bundled:///libs/lib.es2021.intl.d.ts
+		bundled:///libs/lib.es2022.array.d.ts
+		bundled:///libs/lib.es2022.error.d.ts
+		bundled:///libs/lib.es2022.intl.d.ts
+		bundled:///libs/lib.es2022.object.d.ts
+		bundled:///libs/lib.es2022.string.d.ts
+		bundled:///libs/lib.es2022.regexp.d.ts
+		bundled:///libs/lib.es2023.array.d.ts
+		bundled:///libs/lib.es2023.collection.d.ts
+		bundled:///libs/lib.es2023.intl.d.ts
+		bundled:///libs/lib.es2024.arraybuffer.d.ts
+		bundled:///libs/lib.es2024.collection.d.ts
+		bundled:///libs/lib.es2024.object.d.ts
+		bundled:///libs/lib.es2024.promise.d.ts
+		bundled:///libs/lib.es2024.regexp.d.ts
+		bundled:///libs/lib.es2024.sharedmemory.d.ts
+		bundled:///libs/lib.es2024.string.d.ts
+		bundled:///libs/lib.es2025.collection.d.ts
+		bundled:///libs/lib.es2025.float16.d.ts
+		bundled:///libs/lib.es2025.intl.d.ts
+		bundled:///libs/lib.es2025.iterator.d.ts
+		bundled:///libs/lib.es2025.promise.d.ts
+		bundled:///libs/lib.es2025.regexp.d.ts
+		bundled:///libs/lib.decorators.d.ts
+		bundled:///libs/lib.decorators.legacy.d.ts
+		bundled:///libs/lib.es2025.full.d.ts
+		/Users/michaelarnaldi/repositories/ets-go/playground/src/created.ets
+-----------------------------------------------
+[server] 
+======== Cache Statistics ========
+[server] Open file count:        2
+[server] Cached disk files:    244
+[server] Realpath aliases:       0
+[server] Project count:          2
+[server] Config count:           1
+[server] Parse cache size:              240
+[server] Program count:                   2
+[server] Extended config cache size:      0
+[server] Auto Imports:
+[server] 	Unique packages (by realpath): 2
+created.ets: discoverContentMappers -> {"extensions":[]}
+[server] 	Project buckets:
+[server] 		/dev/null/inferred (dirty):
+[server] 			Files: 0
+[server] 			Exports: 0
+[server] 		/users/michaelarnaldi/repositories/ets-go/playground/tsconfig.json:
+[server] 			Files: 3
+[server] 			Exports: 5
+[server] 	node_modules buckets:
+[server] 		/users/michaelarnaldi/repositories/ets-go:
+[server] 			Collected packages: 2
+[server] 			Total packages: 21
+[server] 			Files: 419
+[server] 			Exports: 7133
+[server] 			Recursive search: none
+[server] 
+[server] Updated watches in 25.916µs
+[server] Scheduling new diagnostics refresh...
+[server] handled method 'textDocument/didChange' in 17µs
+[server] Running scheduled diagnostics refresh
+[server] Scheduling new diagnostics refresh...
+[server] handled method 'textDocument/didChange' in 100.875µs
+[server] Running scheduled diagnostics refresh
+[server] Scheduling new diagnostics refresh...
+[server] Delaying scheduled diagnostics refresh...
+[server] handled method 'textDocument/didChange' in 49µs
+[server] Running scheduled diagnostics refresh
+[server] Processed 3 file changes in 25.583µs
+DEBUG-PLAIN-PARSE /Users/michaelarnaldi/repositories/ets-go/playground/src/created.ets extensions: 0 inferred: true roots: 2
+  DEBUG-ROOT /Users/michaelarnaldi/repositories/ets-go/playground/src/created.ets
+  DEBUG-ROOT /Users/michaelarnaldi/Library/Caches/typescript/7.1/node_modules/@types/node/index.d.ts
+panic: ScriptKind must be specified when parsing source file: /Users/michaelarnaldi/repositories/ets-go/playground/src/created.ets [recovered, repanicked]
+
+goroutine 921 [running]:
+sync.(*WaitGroup).Go.func1.1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/sync/waitgroup.go:251 +0x48
+panic({0x101b9f5e0?, 0x36efd1a7e920?})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/panic.go:860 +0x12c
+github.com/microsoft/typescript-go/internal/parser.(*Parser).initializeState(0x101eeb680?, {{0x36efcecffcc7, 0x44}, {0x36efcebd31d0, 0x44}, {0x1, 0x0}}, {0x36efcefcb6b0?, 0x101e78240?}, 0x1c90aa0?)
+	/Users/michaelarnaldi/repositories/ets-go/typescript-go/internal/parser/parser.go:292 +0x37c
+github.com/microsoft/typescript-go/internal/parser.ParseSourceFile({{0x36efcecffcc7, 0x44}, {0x36efcebd31d0, 0x44}, {0x1, 0x0}}, {0x36efcefcb6b0, 0x3}, 0x0)
+	/Users/michaelarnaldi/repositories/ets-go/typescript-go/internal/parser/parser.go:140 +0xac
+github.com/microsoft/typescript-go/internal/project.NewSession.NewParseCache.func3({{{0x36efcecffcc7, 0x44}, {0x36efcebd31d0, 0x44}, {0x1, 0x0}}, 0x0, {0xdec92540300d4bd7, 0x8257234fe900f129}}, {0x101e584a0, ...})
+	/Users/michaelarnaldi/repositories/ets-go/typescript-go/internal/project/parsecache.go:73 +0x84
+github.com/microsoft/typescript-go/internal/project.(*RefCountCache[...]).Acquire(0x36efcecffcc7, {{{0x36efcecffcc7?, 0x44}, {0x36efcebd31d0, 0x44}, {0x1, 0x0}}, 0x0, {0xdec92540300d4bd7, 0x8257234fe900f129}}, ...)
+	/Users/michaelarnaldi/repositories/ets-go/typescript-go/internal/project/refcountcache.go:49 +0xc4
+github.com/microsoft/typescript-go/internal/project.(*compilerHost).GetSourceFile(0x36efce665810, {{0x36efcecffcc7, 0x44}, {0x36efcebd31d0, 0x44}, {0x1, 0x0}})
+	/Users/michaelarnaldi/repositories/ets-go/typescript-go/internal/project/compilerhost.go:102 +0x130
+github.com/microsoft/typescript-go/internal/compiler.(*fileLoader).parseSourceFile(0x36efcefc6a08, 0x36efc7b2f200)
+	/Users/michaelarnaldi/repositories/ets-go/typescript-go/internal/compiler/fileloader.go:411 +0x394
+github.com/microsoft/typescript-go/internal/compiler.(*parseTask).load(0x36efc7b2f200, 0x36efcefc6a08)
+	/Users/michaelarnaldi/repositories/ets-go/typescript-go/internal/compiler/filesparser.go:112 +0x3e0
+github.com/microsoft/typescript-go/internal/compiler.(*filesParser).start.func1()
+	/Users/michaelarnaldi/repositories/ets-go/typescript-go/internal/compiler/filesparser.go:290 +0x308
+github.com/microsoft/typescript-go/internal/core.(*parallelWorkGroup).Queue.func1()
+	/Users/michaelarnaldi/repositories/ets-go/typescript-go/internal/core/workgroup.go:40 +0x24
+sync.(*WaitGroup).Go.func1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/sync/waitgroup.go:258 +0x48
+created by sync.(*WaitGroup).Go in goroutine 19
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/sync/waitgroup.go:238 +0x70

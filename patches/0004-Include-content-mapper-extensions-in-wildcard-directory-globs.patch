@@ -1,0 +1,165 @@
+From 4b1398d3bd6a45bcb7269a691155b8f4af6513f8 Mon Sep 17 00:00:00 2001
+From: Michael Arnaldi <michael.arnaldi@effectful.co>
+Date: Fri, 24 Jul 2026 12:32:50 +0200
+Subject: [PATCH 2/2] Include content mapper extensions in wildcard directory
+ globs
+
+The globs behind PossiblyMatchesFileName were hardcoded to the built-in
+JS/TS extensions, so a content-mapped file created while the server was
+running never matched its config's root files: the config's file names
+were not reloaded, the file was not adopted by its configured project,
+and it fell back to the inferred project (or no project) until a full
+project reload.
+---
+ internal/project/contentmapper_test.go       | 45 ++++++++++++++++++++
+ internal/tsoptions/parsedcommandline.go      | 20 ++++++++-
+ internal/tsoptions/parsedcommandline_test.go | 31 ++++++++++++++
+ 3 files changed, 95 insertions(+), 1 deletion(-)
+
+diff --git a/internal/project/contentmapper_test.go b/internal/project/contentmapper_test.go
+index ce3861a0b..864cee11d 100644
+--- a/internal/project/contentmapper_test.go
++++ b/internal/project/contentmapper_test.go
+@@ -532,6 +532,51 @@ func TestContentMapperInferredProjectSurvivesTypingsInstall(t *testing.T) {
+ 	assert.Assert(t, typingsFile != nil, "expected installed typings in the inferred program (the typings-augmented rebuild did not happen)")
+ }
+ 
++func TestContentMapperCreatedFileAdoptedByConfiguredProject(t *testing.T) {
++	t.Parallel()
++	// A content-mapped file created while the server is running must be adopted by the
++	// configured project: the created-file root matching has to account for the content
++	// mapper extensions, otherwise the file falls into the inferred project until a full
++	// project reload.
++	files := map[string]any{
++		"/home/project/tsconfig.json": `{
++			"compilerOptions": { "target": "es2020", "module": "esnext", "moduleResolution": "bundler" },
++			"contentMappers": [ { "package": "mapper", "extensions": [".box"] } ]
++		}`,
++		"/home/project/node_modules/mapper/package.json": contentmappertest.PackageJSON(contentmappertest.TransformingMapper),
++		"/home/project/main.ts":                          "export const main = true;\n",
++	}
++	init, utils := projecttestutil.GetSessionInitOptions(files, &project.SessionOptions{
++		CurrentDirectory:    "/home/project",
++		DefaultLibraryPath:  bundled.LibPath(),
++		TypingsLocation:     projecttestutil.TestTypingsLocation,
++		PositionEncoding:    lsproto.PositionEncodingKindUTF8,
++		LoadExternalPlugins: true,
++	}, nil)
++	init.Spawner = contentmappertest.NewSpawner()
++	session := project.NewSession(init)
++	defer session.Close()
++
++	ctx := context.Background()
++	mainURI := lsproto.DocumentUri("file:///home/project/main.ts")
++	session.DidOpenFile(ctx, mainURI, 1, files["/home/project/main.ts"].(string), lsproto.LanguageKindTypeScript)
++	_, err := session.GetLanguageService(ctx, mainURI)
++	assert.NilError(t, err)
++
++	assert.NilError(t, utils.FS().WriteFile("/home/project/new.box", "export const version = #{target};\n"))
++	session.DidChangeWatchedFiles(ctx, []*lsproto.FileEvent{{Uri: "file:///home/project/new.box", Type: lsproto.FileChangeTypeCreated}})
++	boxURI := lsproto.DocumentUri("file:///home/project/new.box")
++	session.DidOpenFile(ctx, boxURI, 1, "export const version = #{target};\n", lsproto.LanguageKind("box"))
++	languageService, err := session.GetLanguageService(ctx, boxURI)
++	assert.NilError(t, err)
++	defaultProject := session.Snapshot().GetDefaultProject(boxURI)
++	assert.Assert(t, defaultProject != nil, "expected a default project for the created new.box")
++	assert.Equal(t, defaultProject.Kind, project.KindConfigured)
++	boxFile := languageService.GetProgram().GetSourceFile("/home/project/new.box")
++	assert.Assert(t, boxFile != nil, "expected new.box in the configured project")
++	assert.Assert(t, !strings.Contains(boxFile.Text(), "#{target}"), "expected new.box to be transformed: %q", boxFile.Text())
++}
++
+ func TestDiscoverContentMapperExtensions(t *testing.T) {
+ 	t.Parallel()
+ 	files := map[string]any{
+diff --git a/internal/tsoptions/parsedcommandline.go b/internal/tsoptions/parsedcommandline.go
+index 509947da9..a23988670 100644
+--- a/internal/tsoptions/parsedcommandline.go
++++ b/internal/tsoptions/parsedcommandline.go
+@@ -25,6 +25,23 @@ const (
+ 	recursiveFileGlobPattern = "**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,json}"
+ )
+ 
++// fileGlobPatterns returns the include file glob patterns for this command line, augmenting the
++// built-in patterns with the extensions registered by its content mappers so that created
++// content-mapped files are recognized as possible root files.
++func (p *ParsedCommandLine) fileGlobPatterns() (fileGlob string, recursiveFileGlob string) {
++	mapperExtensions := p.ContentMapperExtensions()
++	if len(mapperExtensions) == 0 {
++		return fileGlobPattern, recursiveFileGlobPattern
++	}
++	extensions := make([]string, 0, 9+len(mapperExtensions))
++	extensions = append(extensions, "js", "jsx", "mjs", "cjs", "ts", "tsx", "mts", "cts", "json")
++	for _, extension := range mapperExtensions {
++		extensions = append(extensions, strings.TrimPrefix(extension, "."))
++	}
++	fileGlob = "*.{" + strings.Join(extensions, ",") + "}"
++	return fileGlob, "**/" + fileGlob
++}
++
+ type ParsedCommandLine struct {
+ 	ParsedConfig *ParsedOptions `json:"parsedConfig"`
+ 
+@@ -246,9 +263,10 @@ func (p *ParsedCommandLine) WildcardDirectoryGlobs() []*glob.Glob {
+ 
+ 	p.includeGlobsOnce.Do(func() {
+ 		if p.includeGlobs == nil {
++			fileGlob, recursiveFileGlob := p.fileGlobPatterns()
+ 			globs := make([]*glob.Glob, 0, len(wildcardDirectories))
+ 			for dir, recursive := range wildcardDirectories {
+-				if parsed, err := glob.Parse(fmt.Sprintf("%s/%s", tspath.NormalizePath(dir), core.IfElse(recursive, recursiveFileGlobPattern, fileGlobPattern))); err == nil {
++				if parsed, err := glob.Parse(fmt.Sprintf("%s/%s", tspath.NormalizePath(dir), core.IfElse(recursive, recursiveFileGlob, fileGlob))); err == nil {
+ 					globs = append(globs, parsed)
+ 				}
+ 			}
+diff --git a/internal/tsoptions/parsedcommandline_test.go b/internal/tsoptions/parsedcommandline_test.go
+index 8015a820a..6f69e4de0 100644
+--- a/internal/tsoptions/parsedcommandline_test.go
++++ b/internal/tsoptions/parsedcommandline_test.go
+@@ -4,6 +4,7 @@ import (
+ 	"slices"
+ 	"testing"
+ 
++	"github.com/microsoft/typescript-go/internal/core"
+ 	"github.com/microsoft/typescript-go/internal/tsoptions"
+ 	"github.com/microsoft/typescript-go/internal/tsoptions/tsoptionstest"
+ 	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
+@@ -164,5 +165,35 @@ func TestParsedCommandLine(t *testing.T) {
+ 				})
+ 			})
+ 		})
++
++		t.Run("PossiblyMatchesFileName with content mapper extensions", func(t *testing.T) {
++			t.Parallel()
++
++			host := tsoptionstest.NewVFSParseConfigHost(map[string]string{}, "/dev", true)
++			configFileName := "/dev/tsconfig.json"
++			jsonText := `{
++			"include": ["src"],
++			"contentMappers": [ { "package": "mapper", "extensions": [".box"] } ]
++		}`
++			tsconfigSourceFile := tsoptions.NewTsconfigSourceFileFromFilePath(configFileName, "/dev/tsconfig.json", jsonText)
++			parsedCommandLine := tsoptions.ParseJsonSourceFileConfigFileContent(
++				tsconfigSourceFile,
++				host,
++				"/dev",
++				&core.CompilerOptions{LoadExternalPlugins: core.TSTrue},
++				nil,
++				configFileName,
++				nil,
++				nil,
++			)
++
++			// A created content-mapped file under an included directory must be recognized as a
++			// possible root file, or the config's root files are never reloaded for it.
++			assert.Assert(t, parsedCommandLine.PossiblyMatchesFileName("/dev/src/new.box"))
++			assert.Assert(t, parsedCommandLine.PossiblyMatchesFileName("/dev/src/new.ts"))
++			assert.Assert(t, !parsedCommandLine.PossiblyMatchesFileName("/dev/src/new.vue"))
++			assert.Assert(t, !parsedCommandLine.PossiblyMatchesFileName("/dev/other/new.box"))
++		})
+ 	})
++
+ }
+-- 
+2.53.0
+
