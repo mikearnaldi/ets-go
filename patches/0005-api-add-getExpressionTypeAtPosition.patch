@@ -1,0 +1,354 @@
+From 79576bd75590dc95ff1485563532e11b17021d08 Mon Sep 17 00:00:00 2001
+From: Michael Arnaldi <michael.arnaldi@effectful.co>
+Date: Fri, 24 Jul 2026 13:44:19 +0200
+Subject: [PATCH] api: add getExpressionTypeAtPosition
+
+getTypeAtPosition resolves the innermost node at a position, which for
+the start of foo.bar(baz) is the identifier foo. API consumers asking
+about an expression (e.g. editors augmenting hover for language
+constructs that compile to plain expressions) want the type of the
+whole expression instead.
+
+getExpressionTypeAtPosition ascends from the touching node through
+enclosing expressions that share its start position, stopping below
+yield expressions so the operand of yield* is answered with its own
+type rather than the unwrapped yielded-value type.
+
+For content-mapped files the incoming position is interpreted in the
+file's original text and mapped forward through the span map
+(PurposeSemantic), matching how LSP position-based features treat
+mapped files; getTypeAtPosition continues to operate in transformed
+coordinates.
+---
+ internal/api/proto.go                       |  92 +++++++-------
+ internal/api/session.go                     |  63 ++++++++++
+ internal/api/session_expressiontype_test.go | 126 ++++++++++++++++++++
+ 3 files changed, 236 insertions(+), 45 deletions(-)
+ create mode 100644 internal/api/session_expressiontype_test.go
+
+diff --git a/internal/api/proto.go b/internal/api/proto.go
+index aad8fd9a0..d0f511c6a 100644
+--- a/internal/api/proto.go
++++ b/internal/api/proto.go
+@@ -67,28 +67,29 @@ const (
+ 	// the connection itself and is not recorded.
+ 	MethodResetServerTiming Method = "resetServerTiming"
+ 
+-	MethodInitialize               Method = "initialize"
+-	MethodUpdateSnapshot           Method = "updateSnapshot"
+-	MethodUpdateTemporarySnapshot  Method = "updateTemporarySnapshot"
+-	MethodParseConfigFile          Method = "parseConfigFile"
+-	MethodGetDefaultProjectForFile Method = "getDefaultProjectForFile"
+-	MethodGetSymbolAtPosition      Method = "getSymbolAtPosition"
+-	MethodGetSymbolsAtPositions    Method = "getSymbolsAtPositions"
+-	MethodGetSymbolAtLocation      Method = "getSymbolAtLocation"
+-	MethodGetSymbolsAtLocations    Method = "getSymbolsAtLocations"
+-	MethodGetTypeOfSymbol          Method = "getTypeOfSymbol"
+-	MethodGetTypesOfSymbols        Method = "getTypesOfSymbols"
+-	MethodGetDeclaredTypeOfSymbol  Method = "getDeclaredTypeOfSymbol"
+-	MethodGetSourceFile            Method = "getSourceFile"
+-	MethodGetSourceFileNames       Method = "getSourceFileNames"
+-	MethodGetSourceFileMetadata    Method = "getSourceFileMetadata"
+-	MethodResolveName              Method = "resolveName"
+-	MethodGetSignaturesOfType      Method = "getSignaturesOfType"
+-	MethodGetResolvedSignature     Method = "getResolvedSignature"
+-	MethodGetTypeAtLocation        Method = "getTypeAtLocation"
+-	MethodGetTypeAtLocations       Method = "getTypeAtLocations"
+-	MethodGetTypeAtPosition        Method = "getTypeAtPosition"
+-	MethodGetTypesAtPositions      Method = "getTypesAtPositions"
++	MethodInitialize                  Method = "initialize"
++	MethodUpdateSnapshot              Method = "updateSnapshot"
++	MethodUpdateTemporarySnapshot     Method = "updateTemporarySnapshot"
++	MethodParseConfigFile             Method = "parseConfigFile"
++	MethodGetDefaultProjectForFile    Method = "getDefaultProjectForFile"
++	MethodGetSymbolAtPosition         Method = "getSymbolAtPosition"
++	MethodGetSymbolsAtPositions       Method = "getSymbolsAtPositions"
++	MethodGetSymbolAtLocation         Method = "getSymbolAtLocation"
++	MethodGetSymbolsAtLocations       Method = "getSymbolsAtLocations"
++	MethodGetTypeOfSymbol             Method = "getTypeOfSymbol"
++	MethodGetTypesOfSymbols           Method = "getTypesOfSymbols"
++	MethodGetDeclaredTypeOfSymbol     Method = "getDeclaredTypeOfSymbol"
++	MethodGetSourceFile               Method = "getSourceFile"
++	MethodGetSourceFileNames          Method = "getSourceFileNames"
++	MethodGetSourceFileMetadata       Method = "getSourceFileMetadata"
++	MethodResolveName                 Method = "resolveName"
++	MethodGetSignaturesOfType         Method = "getSignaturesOfType"
++	MethodGetResolvedSignature        Method = "getResolvedSignature"
++	MethodGetTypeAtLocation           Method = "getTypeAtLocation"
++	MethodGetTypeAtLocations          Method = "getTypeAtLocations"
++	MethodGetTypeAtPosition           Method = "getTypeAtPosition"
++	MethodGetTypesAtPositions         Method = "getTypesAtPositions"
++	MethodGetExpressionTypeAtPosition Method = "getExpressionTypeAtPosition"
+ 
+ 	// Symbol sub-property methods
+ 	MethodGetParentOfSymbol       Method = "getParentOfSymbol"
+@@ -377,29 +378,30 @@ type UpdateSnapshotResponse struct {
+ }
+ 
+ var unmarshalers = map[Method]func([]byte) (any, error){
+-	MethodRelease:                  unmarshallerFor[ReleaseParams],
+-	MethodInitialize:               noParams,
+-	MethodUpdateSnapshot:           unmarshallerFor[UpdateSnapshotParams],
+-	MethodUpdateTemporarySnapshot:  unmarshallerFor[UpdateTemporarySnapshotParams],
+-	MethodParseConfigFile:          unmarshallerFor[ParseConfigFileParams],
+-	MethodGetDefaultProjectForFile: unmarshallerFor[GetDefaultProjectForFileParams],
+-	MethodGetSourceFile:            unmarshallerFor[GetSourceFileParams],
+-	MethodGetSourceFileNames:       unmarshallerFor[GetSourceFileNamesParams],
+-	MethodGetSourceFileMetadata:    unmarshallerFor[GetSourceFileParams],
+-	MethodGetSymbolAtPosition:      unmarshallerFor[GetSymbolAtPositionParams],
+-	MethodGetSymbolsAtPositions:    unmarshallerFor[GetSymbolsAtPositionsParams],
+-	MethodGetSymbolAtLocation:      unmarshallerFor[GetSymbolAtLocationParams],
+-	MethodGetSymbolsAtLocations:    unmarshallerFor[GetSymbolsAtLocationsParams],
+-	MethodGetTypeOfSymbol:          unmarshallerFor[GetTypeOfSymbolParams],
+-	MethodGetTypesOfSymbols:        unmarshallerFor[GetTypesOfSymbolsParams],
+-	MethodGetDeclaredTypeOfSymbol:  unmarshallerFor[GetTypeOfSymbolParams],
+-	MethodResolveName:              unmarshallerFor[ResolveNameParams],
+-	MethodGetSignaturesOfType:      unmarshallerFor[GetSignaturesOfTypeParams],
+-	MethodGetResolvedSignature:     unmarshallerFor[GetResolvedSignatureParams],
+-	MethodGetTypeAtLocation:        unmarshallerFor[GetTypeAtLocationParams],
+-	MethodGetTypeAtLocations:       unmarshallerFor[GetTypeAtLocationsParams],
+-	MethodGetTypeAtPosition:        unmarshallerFor[GetTypeAtPositionParams],
+-	MethodGetTypesAtPositions:      unmarshallerFor[GetTypesAtPositionsParams],
++	MethodRelease:                     unmarshallerFor[ReleaseParams],
++	MethodInitialize:                  noParams,
++	MethodUpdateSnapshot:              unmarshallerFor[UpdateSnapshotParams],
++	MethodUpdateTemporarySnapshot:     unmarshallerFor[UpdateTemporarySnapshotParams],
++	MethodParseConfigFile:             unmarshallerFor[ParseConfigFileParams],
++	MethodGetDefaultProjectForFile:    unmarshallerFor[GetDefaultProjectForFileParams],
++	MethodGetSourceFile:               unmarshallerFor[GetSourceFileParams],
++	MethodGetSourceFileNames:          unmarshallerFor[GetSourceFileNamesParams],
++	MethodGetSourceFileMetadata:       unmarshallerFor[GetSourceFileParams],
++	MethodGetSymbolAtPosition:         unmarshallerFor[GetSymbolAtPositionParams],
++	MethodGetSymbolsAtPositions:       unmarshallerFor[GetSymbolsAtPositionsParams],
++	MethodGetSymbolAtLocation:         unmarshallerFor[GetSymbolAtLocationParams],
++	MethodGetSymbolsAtLocations:       unmarshallerFor[GetSymbolsAtLocationsParams],
++	MethodGetTypeOfSymbol:             unmarshallerFor[GetTypeOfSymbolParams],
++	MethodGetTypesOfSymbols:           unmarshallerFor[GetTypesOfSymbolsParams],
++	MethodGetDeclaredTypeOfSymbol:     unmarshallerFor[GetTypeOfSymbolParams],
++	MethodResolveName:                 unmarshallerFor[ResolveNameParams],
++	MethodGetSignaturesOfType:         unmarshallerFor[GetSignaturesOfTypeParams],
++	MethodGetResolvedSignature:        unmarshallerFor[GetResolvedSignatureParams],
++	MethodGetTypeAtLocation:           unmarshallerFor[GetTypeAtLocationParams],
++	MethodGetTypeAtLocations:          unmarshallerFor[GetTypeAtLocationsParams],
++	MethodGetTypeAtPosition:           unmarshallerFor[GetTypeAtPositionParams],
++	MethodGetTypesAtPositions:         unmarshallerFor[GetTypesAtPositionsParams],
++	MethodGetExpressionTypeAtPosition: unmarshallerFor[GetTypeAtPositionParams],
+ 
+ 	MethodGetParentOfSymbol:       unmarshallerFor[GetSymbolPropertyParams],
+ 	MethodGetMembersOfSymbol:      unmarshallerFor[GetSymbolPropertyParams],
+diff --git a/internal/api/session.go b/internal/api/session.go
+index 41d308a3d..0945f3962 100644
+--- a/internal/api/session.go
++++ b/internal/api/session.go
+@@ -626,6 +626,8 @@ func (s *Session) HandleRequest(ctx context.Context, method string, params json.
+ 		return s.handleGetTypeAtPosition(ctx, parsed.(*GetTypeAtPositionParams))
+ 	case string(MethodGetTypesAtPositions):
+ 		return s.handleGetTypesAtPositions(ctx, parsed.(*GetTypesAtPositionsParams))
++	case string(MethodGetExpressionTypeAtPosition):
++		return s.handleGetExpressionTypeAtPosition(ctx, parsed.(*GetTypeAtPositionParams))
+ 	case string(MethodGetParentOfSymbol):
+ 		return s.handleGetParentOfSymbol(ctx, parsed.(*GetSymbolPropertyParams))
+ 	case string(MethodGetMembersOfSymbol):
+@@ -1481,6 +1483,67 @@ func (s *Session) handleGetTypeAtLocations(ctx context.Context, params *GetTypeA
+ 	return results, nil
+ }
+ 
++// handleGetExpressionTypeAtPosition returns the type of the outermost expression starting at a
++// position in a file. Unlike getTypeAtPosition, which resolves the innermost node, a position at
++// the start of `foo.bar(baz)` yields the type of the whole call expression. For content-mapped
++// files the position is interpreted in the file's original text and mapped forward into the
++// transformed text the checker operates over.
++func (s *Session) handleGetExpressionTypeAtPosition(ctx context.Context, params *GetTypeAtPositionParams) (*TypeResponse, error) {
++	setup, err := s.setupChecker(ctx, params.Snapshot, params.Project)
++	if err != nil {
++		return nil, err
++	}
++	defer setup.done()
++
++	sourceFile := setup.program.GetSourceFile(params.File.ToFileName())
++	if sourceFile == nil {
++		return nil, fmt.Errorf("%w: source file not found: %v", ErrClientError, params.File)
++	}
++
++	var position int
++	if spans := sourceFile.SpanMap(); spans != nil {
++		originalOffset := ast.ComputePositionMap(sourceFile.OriginalText()).UTF16ToUTF8(int(params.Position))
++		mapped := spans.OriginalToGeneratedPositions(core.TextPos(originalOffset), spanmap.PurposeSemantic)
++		position = -1
++		for _, mp := range mapped {
++			if mp.Fidelity.IsSingleSegment() {
++				position = int(mp.Position)
++				break
++			}
++		}
++		if position < 0 {
++			return nil, nil
++		}
++	} else {
++		position = sourceFile.GetPositionMap().UTF16ToUTF8(int(params.Position))
++	}
++
++	node := astnav.GetTouchingPropertyName(sourceFile, position)
++	if node == nil || ast.IsSourceFile(node) {
++		return nil, nil
++	}
++	expr := outermostExpressionAt(node)
++	t := setup.checker.GetTypeAtLocation(expr)
++	if t == nil {
++		return nil, nil
++	}
++
++	return setup.newTypeResponse(t), nil
++}
++
++// outermostExpressionAt ascends from node through enclosing expressions that share its start
++// position, so a position at the start of `foo.bar(baz)` yields the whole call expression.
++// Ascent stops below yield expressions: the type of `yield* x` is the yielded value's unwrapped
++// type, not the type of the operand expression x that a caller asking about the start of the
++// operand is interested in.
++func outermostExpressionAt(node *ast.Node) *ast.Node {
++	expr := node
++	for parent := expr.Parent; parent != nil && parent.Pos() == expr.Pos() && ast.IsExpression(parent) && parent.Kind != ast.KindYieldExpression; parent = parent.Parent {
++		expr = parent
++	}
++	return expr
++}
++
+ // handleGetTypeAtPosition returns the type at a position in a file.
+ func (s *Session) handleGetTypeAtPosition(ctx context.Context, params *GetTypeAtPositionParams) (*TypeResponse, error) {
+ 	setup, err := s.setupChecker(ctx, params.Snapshot, params.Project)
+diff --git a/internal/api/session_expressiontype_test.go b/internal/api/session_expressiontype_test.go
+new file mode 100644
+index 000000000..e0c85e711
+--- /dev/null
++++ b/internal/api/session_expressiontype_test.go
+@@ -0,0 +1,126 @@
++package api
++
++import (
++	"context"
++	"strings"
++	"testing"
++
++	"github.com/microsoft/typescript-go/internal/bundled"
++	"github.com/microsoft/typescript-go/internal/lsp/lsproto"
++	"github.com/microsoft/typescript-go/internal/project"
++	"github.com/microsoft/typescript-go/internal/testutil/contentmappertest"
++	"github.com/microsoft/typescript-go/internal/testutil/projecttestutil"
++	"gotest.tools/v3/assert"
++)
++
++// TestSessionGetExpressionTypeAtPosition verifies that getExpressionTypeAtPosition resolves the
++// outermost expression starting at the given position (rather than the innermost node), that it
++// stops below yield expressions (whose own type is the unwrapped yielded value, not the operand's
++// type), and that for content-mapped files the position is interpreted in the original text and
++// mapped forward into the transformed text.
++func TestSessionGetExpressionTypeAtPosition(t *testing.T) {
++	t.Parallel()
++	if !bundled.Embedded {
++		t.Skip("bundled files are not embedded")
++	}
++	ctx := context.Background()
++
++	t.Run("ascends to the outermost expression", func(t *testing.T) {
++		t.Parallel()
++		const fileName = "/home/projects/p/src/index.ts"
++		content := `declare function compute(input: string): number;
++declare function f(): Generator<number, string, boolean>;
++export const n = compute("a");
++export function* g(): Generator<number, string, boolean> {
++	const x = yield* f();
++	return x;
++}
++`
++		files := map[string]any{
++			"/home/projects/p/tsconfig.json": `{ "compilerOptions": { "strict": true, "target": "es2020" } }`,
++			fileName:                       content,
++		}
++		projectSession, _ := projecttestutil.Setup(files)
++		defer projectSession.Close()
++		session := NewSession(projectSession, nil)
++		defer session.Close()
++
++		snapshotResp, err := session.handleUpdateSnapshot(ctx, &UpdateSnapshotParams{
++			OpenProjects: []DocumentIdentifier{{FileName: "/home/projects/p/tsconfig.json"}},
++		})
++		assert.NilError(t, err)
++		projectID := snapshotResp.Projects[0].Id
++
++		getType := func(position int) *TypeResponse {
++			t.Helper()
++			resp, err := session.handleGetExpressionTypeAtPosition(ctx, &GetTypeAtPositionParams{
++				Snapshot: snapshotResp.Snapshot,
++				Project:  projectID,
++				File:     DocumentIdentifier{FileName: fileName},
++				Position: uint32(position),
++			})
++			assert.NilError(t, err)
++			return resp
++		}
++
++		// A position at the start of `compute("a")` yields the call's result type `number`;
++		// the innermost identifier's type would be the function type `(input: string) => number`.
++		callType := getType(strings.Index(content, `compute("a")`))
++		assert.Assert(t, callType != nil)
++		assert.Equal(t, callType.IntrinsicName, "number")
++
++		// A position at the start of the `yield*` operand yields the operand's type
++		// `Generator<number, string, boolean>`; ascending to the yield expression itself would
++		// yield its unwrapped type `string`.
++		operandType := getType(strings.Index(content, "f()"))
++		assert.Assert(t, operandType != nil)
++		assert.Equal(t, operandType.IntrinsicName, "")
++		assert.Assert(t, operandType.Symbol != 0)
++	})
++
++	t.Run("maps original positions of content-mapped files", func(t *testing.T) {
++		t.Parallel()
++		const fileName = "/home/project/app.box"
++		content := `declare function compute(input: string): number;
++export const result = compute("x");
++`
++		files := map[string]any{
++			"/home/project/tsconfig.json": `{
++				"compilerOptions": { "target": "es2020", "module": "esnext", "moduleResolution": "bundler", "strict": true },
++				"contentMappers": [ { "package": "mapper", "extensions": [".box"] } ]
++			}`,
++			"/home/project/node_modules/mapper/package.json": contentmappertest.PackageJSON(contentmappertest.TransformingMapper),
++			fileName: content,
++		}
++		init, _ := projecttestutil.GetSessionInitOptions(files, &project.SessionOptions{
++			CurrentDirectory:    "/home/project",
++			DefaultLibraryPath:  bundled.LibPath(),
++			TypingsLocation:     projecttestutil.TestTypingsLocation,
++			PositionEncoding:    lsproto.PositionEncodingKindUTF8,
++			LoadExternalPlugins: true,
++		}, nil)
++		init.Spawner = contentmappertest.NewSpawner()
++		projectSession := project.NewSession(init)
++		defer projectSession.Close()
++		session := NewSession(projectSession, nil)
++		defer session.Close()
++
++		snapshotResp, err := session.handleUpdateSnapshot(ctx, &UpdateSnapshotParams{
++			OpenProjects: []DocumentIdentifier{{FileName: "/home/project/tsconfig.json"}},
++		})
++		assert.NilError(t, err)
++
++		// The mapper injects a synthesized preamble ahead of the body, so the original offset of
++		// `compute("x")` only resolves to the call if it is mapped forward into the transformed
++		// text; interpreted as a transformed-text offset it would land inside the preamble region.
++		resp, err := session.handleGetExpressionTypeAtPosition(ctx, &GetTypeAtPositionParams{
++			Snapshot: snapshotResp.Snapshot,
++			Project:  snapshotResp.Projects[0].Id,
++			File:     DocumentIdentifier{FileName: fileName},
++			Position: uint32(strings.Index(content, `compute("x")`)),
++		})
++		assert.NilError(t, err)
++		assert.Assert(t, resp != nil)
++		assert.Equal(t, resp.IntrinsicName, "number")
++	})
++}
+-- 
+2.53.0
+

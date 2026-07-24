@@ -13,6 +13,9 @@
     "Programming Languages"
   ],
   "main": "./src/extension.js",
+  "dependencies": {
+    "vscode-jsonrpc": "^8.2.0"
+  },
   "extensionDependencies": [
     "TypeScriptTeam.native-preview"
   ],

@@ -1,0 +1,36 @@
+From a307318477e9fb6f49319af852a0b797a8a39013 Mon Sep 17 00:00:00 2001
+From: Michael Arnaldi <michael.arnaldi@effectful.co>
+Date: Fri, 24 Jul 2026 13:51:01 +0200
+Subject: [PATCH] lsp: keep generated API pipe paths within sun_path limits
+
+generateAPIPipePath joined os.TempDir() with a 42-character name; under
+a long TMPDIR (macOS per-user dirs combined with tools like nix-shell)
+the result exceeds the 104-byte sun_path limit of a unix socket and
+NewPipeTransport fails to bind, making custom/initializeAPISession
+unusable. A shorter random name keeps the path well under the limit.
+---
+ internal/lsp/server.go | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/internal/lsp/server.go b/internal/lsp/server.go
+index a50cc4d16..f59e44a8b 100644
+--- a/internal/lsp/server.go
++++ b/internal/lsp/server.go
+@@ -2087,10 +2087,11 @@ func (s *Server) handleInitializeAPISession(ctx context.Context, params *lsproto
+ }
+ 
+ func (s *Server) generateAPIPipePath() string {
+-	// Generate a high-entropy path using time and random source
+-	now := time.Now().UnixNano()
++	// Keep the name short: the pipe path must fit in a unix socket's sun_path
++	// (104 bytes on darwin), and os.TempDir() can already be long (e.g. under
++	// macOS per-user dirs or a nix-shell TMPDIR).
+ 	rnd := rand.Uint64()
+-	return ipc.GeneratePipePath(fmt.Sprintf("tsgo-api-%x-%x", now, rnd))
++	return ipc.GeneratePipePath(fmt.Sprintf("tsapi-%x", rnd))
+ }
+ 
+ func (s *Server) removeAPISession(id string) {
+-- 
+2.53.0
+
